@@ -1130,3 +1130,20 @@ func (c *Client) UpdateMohClass(ctx context.Context, tenant, id int64, p MohClas
 func (c *Client) DeleteMohClass(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "moh-classes"), id))
 }
+
+// ---- call recording policy
+
+type CallRecordingPolicy struct {
+	ExtensionID int64  `json:"extension_id"`
+	Mode        string `json:"mode"`
+}
+
+func (c *Client) SetCallRecordingPolicy(ctx context.Context, tenant, ext int64, mode string) (CallRecordingPolicy, error) {
+	var p CallRecordingPolicy
+	err := c.do(ctx, "PUT", fmt.Sprintf("%s/%d/call-recording", tp(tenant, "extensions"), ext), map[string]string{"mode": mode}, &p)
+	return p, err
+}
+
+func (c *Client) GetCallRecordingPolicy(ctx context.Context, tenant, ext int64) (CallRecordingPolicy, error) {
+	return get[CallRecordingPolicy](ctx, c, fmt.Sprintf("%s/%d/call-recording", tp(tenant, "extensions"), ext))
+}

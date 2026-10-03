@@ -59,7 +59,7 @@ func (p *apipbxProvider) Resources(context.Context) []func() resource.Resource {
 		NewRingGroupResource, NewInboundRouteResource, NewOutboundRouteResource, NewVoicemailBoxResource,
 		NewTimeGroupResource, NewTimeConditionResource, NewIVRResource, NewRecordingResource, NewVoicemailGreetingResource,
 		NewBlacklistEntryResource, NewBlacklistSettingsResource, NewQueueResource, NewConferenceResource,
-		NewPagingGroupResource, NewFollowMeResource, NewMohClassResource, NewAnnouncementResource, NewMiscDestinationResource, NewCallerIDStepResource, NewSpeedDialResource,
+		NewPagingGroupResource, NewFollowMeResource, NewMohClassResource, NewCallRecordingPolicyResource, NewAnnouncementResource, NewMiscDestinationResource, NewCallerIDStepResource, NewSpeedDialResource,
 	}
 }
 
