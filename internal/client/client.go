@@ -1260,3 +1260,38 @@ func (c *Client) UpdatePinSet(ctx context.Context, tenant, id int64, p PinSetPat
 func (c *Client) DeletePinSet(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "pin-sets"), id))
 }
+
+// ---- DISA
+
+type DISA struct {
+	ID       int64  `json:"id"`
+	TenantID int64  `json:"tenant_id"`
+	Name     string `json:"name"`
+	PinSetID int64  `json:"pin_set_id"`
+	CallerID string `json:"caller_id"`
+}
+
+type DISAInput struct {
+	Name     string `json:"name"`
+	PinSetID int64  `json:"pin_set_id"`
+	CallerID string `json:"caller_id"`
+}
+
+type DISAPatch struct {
+	Name     *string `json:"name,omitempty"`
+	PinSetID *int64  `json:"pin_set_id,omitempty"`
+	CallerID *string `json:"caller_id,omitempty"`
+}
+
+func (c *Client) CreateDISA(ctx context.Context, tenant int64, in DISAInput) (DISA, error) {
+	return create[DISA](ctx, c, tp(tenant, "disas"), in)
+}
+func (c *Client) GetDISA(ctx context.Context, tenant, id int64) (DISA, error) {
+	return get[DISA](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "disas"), id))
+}
+func (c *Client) UpdateDISA(ctx context.Context, tenant, id int64, p DISAPatch) (DISA, error) {
+	return patch[DISA](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "disas"), id), p)
+}
+func (c *Client) DeleteDISA(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "disas"), id))
+}
