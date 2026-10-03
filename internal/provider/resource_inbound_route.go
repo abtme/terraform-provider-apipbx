@@ -23,6 +23,7 @@ type inboundRouteModel struct {
 	DID             types.String `tfsdk:"did"`
 	Description     types.String `tfsdk:"description"`
 	CIDPrefix       types.String `tfsdk:"cid_prefix"`
+	Language        types.String `tfsdk:"language"`
 	DestinationType types.String `tfsdk:"destination_type"`
 	DestinationID   types.String `tfsdk:"destination_id"`
 }
@@ -43,6 +44,7 @@ func (r *inboundRouteResource) Schema(_ context.Context, _ resource.SchemaReques
 			"did":              schema.StringAttribute{Required: true, Description: "Globally unique, 3-20 digits, optional leading +.", PlanModifiers: replace},
 			"description":      schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
 			"cid_prefix":       schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
+			"language":         schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "The language callers of this number hear (an Asterisk sound directory name); empty keeps the trunk's."},
 			"destination_type": schema.StringAttribute{Required: true, Description: "extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group, voicemail_group, disa or hangup."},
 			"destination_id":   schema.StringAttribute{Optional: true, Description: "Id of the extension, ring group or voicemail box."},
 		}}
@@ -56,6 +58,7 @@ func (m *inboundRouteModel) set(rt client.InboundRoute) {
 	m.ID = types.StringValue(strings.Join([]string{idString(rt.TenantID).ValueString(), rt.DID}, "/"))
 	m.TenantID, m.DID = idString(rt.TenantID), types.StringValue(rt.DID)
 	m.Description, m.CIDPrefix = types.StringValue(rt.Description), types.StringValue(rt.CIDPrefix)
+	m.Language = types.StringValue(rt.Language)
 	m.DestinationType, m.DestinationID = destination(rt.Destination)
 }
 
@@ -68,7 +71,7 @@ func (r *inboundRouteResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 	rt, err := r.c.CreateInboundRoute(ctx, tenant, client.InboundRouteInput{
-		DID: m.DID.ValueString(), Description: m.Description.ValueString(), CIDPrefix: m.CIDPrefix.ValueString(), Destination: *dest,
+		DID: m.DID.ValueString(), Description: m.Description.ValueString(), CIDPrefix: m.CIDPrefix.ValueString(), Language: m.Language.ValueString(), Destination: *dest,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create inbound route", err.Error())
@@ -103,7 +106,7 @@ func (r *inboundRouteResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 	rt, err := r.c.UpdateInboundRoute(ctx, tenant, m.DID.ValueString(), client.InboundRoutePatch{
-		Description: ptr(m.Description.ValueString()), CIDPrefix: ptr(m.CIDPrefix.ValueString()), Destination: dest,
+		Description: ptr(m.Description.ValueString()), CIDPrefix: ptr(m.CIDPrefix.ValueString()), Language: ptr(m.Language.ValueString()), Destination: dest,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update inbound route", err.Error())

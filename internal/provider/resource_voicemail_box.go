@@ -29,6 +29,7 @@ type voicemailBoxModel struct {
 	SayCID           types.Bool   `tfsdk:"say_cid"`
 	Envelope         types.Bool   `tfsdk:"envelope"`
 	MaxMessages      types.Int64  `tfsdk:"max_messages"`
+	Language         types.String `tfsdk:"language"`
 }
 
 func NewVoicemailBoxResource() resource.Resource { return &voicemailBoxResource{} }
@@ -55,6 +56,7 @@ func (r *voicemailBoxResource) Schema(_ context.Context, _ resource.SchemaReques
 			"say_cid":            schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false)},
 			"envelope":           schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false)},
 			"max_messages":       schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(100)},
+			"language":           schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("en"), Description: "The language of the mailbox prompts (an Asterisk sound directory name such as en or es)."},
 		}}
 }
 
@@ -67,6 +69,7 @@ func (m *voicemailBoxModel) set(b client.VoicemailBox) {
 	m.Number, m.Name, m.PIN, m.Email = types.StringValue(b.Number), types.StringValue(b.Name), types.StringValue(b.PIN), types.StringValue(b.Email)
 	m.Attach, m.DeleteAfterEmail = types.BoolValue(b.Attach), types.BoolValue(b.DeleteAfterEmail)
 	m.SayCID, m.Envelope, m.MaxMessages = types.BoolValue(b.SayCID), types.BoolValue(b.Envelope), types.Int64Value(int64(b.MaxMessages))
+	m.Language = types.StringValue(b.Language)
 }
 
 func (r *voicemailBoxResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -79,7 +82,7 @@ func (r *voicemailBoxResource) Create(ctx context.Context, req resource.CreateRe
 	b, err := r.c.CreateVoicemailBox(ctx, tenant, client.VoicemailBoxInput{
 		Number: m.Number.ValueString(), Name: m.Name.ValueString(), PIN: m.PIN.ValueString(), Email: m.Email.ValueString(),
 		Attach: m.Attach.ValueBool(), DeleteAfterEmail: m.DeleteAfterEmail.ValueBool(), SayCID: m.SayCID.ValueBool(),
-		Envelope: m.Envelope.ValueBool(), MaxMessages: int(m.MaxMessages.ValueInt64()),
+		Envelope: m.Envelope.ValueBool(), MaxMessages: int(m.MaxMessages.ValueInt64()), Language: m.Language.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create voicemail box", err.Error())
@@ -115,7 +118,7 @@ func (r *voicemailBoxResource) Update(ctx context.Context, req resource.UpdateRe
 	b, err := r.c.UpdateVoicemailBox(ctx, tenant, id, client.VoicemailBoxPatch{
 		Name: ptr(m.Name.ValueString()), PIN: ptr(m.PIN.ValueString()), Email: ptr(m.Email.ValueString()),
 		Attach: ptr(m.Attach.ValueBool()), DeleteAfterEmail: ptr(m.DeleteAfterEmail.ValueBool()),
-		SayCID: ptr(m.SayCID.ValueBool()), Envelope: ptr(m.Envelope.ValueBool()), MaxMessages: ptr(int(m.MaxMessages.ValueInt64())),
+		SayCID: ptr(m.SayCID.ValueBool()), Envelope: ptr(m.Envelope.ValueBool()), MaxMessages: ptr(int(m.MaxMessages.ValueInt64())), Language: ptr(m.Language.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update voicemail box", err.Error())

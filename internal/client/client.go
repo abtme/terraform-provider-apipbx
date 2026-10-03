@@ -184,6 +184,7 @@ type Extension struct {
 	Enabled     bool   `json:"enabled"`
 	// VoicemailBoxID is the extension's mailbox (nil: none).
 	VoicemailBoxID       *int64 `json:"voicemail_box_id"`
+	Language             string `json:"language"`
 	DND                  bool   `json:"dnd"`
 	ForwardUnconditional string `json:"forward_unconditional"`
 	ForwardBusy          string `json:"forward_busy"`
@@ -199,6 +200,7 @@ type ExtensionInput struct {
 	OutboundCID          string `json:"outbound_cid"`
 	RingTime             int    `json:"ring_time,omitempty"`
 	VoicemailBoxID       *int64 `json:"voicemail_box_id,omitempty"`
+	Language             string `json:"language,omitempty"`
 	DND                  bool   `json:"dnd,omitempty"`
 	ForwardUnconditional string `json:"forward_unconditional,omitempty"`
 	ForwardBusy          string `json:"forward_busy,omitempty"`
@@ -219,6 +221,7 @@ type ExtensionPatch struct {
 	ForwardBusy          *string `json:"forward_busy,omitempty"`
 	ForwardNoAnswer      *string `json:"forward_no_answer,omitempty"`
 	ForwardUnavailable   *string `json:"forward_unavailable,omitempty"`
+	Language             *string `json:"language,omitempty"`
 }
 
 func (c *Client) CreateExtension(ctx context.Context, tenant int64, in ExtensionInput) (Extension, error) {
@@ -356,6 +359,7 @@ type InboundRoute struct {
 	Description string      `json:"description"`
 	CIDPrefix   string      `json:"cid_prefix"`
 	Destination Destination `json:"destination"`
+	Language    string      `json:"language"`
 }
 
 type InboundRouteInput struct {
@@ -363,12 +367,14 @@ type InboundRouteInput struct {
 	Description string      `json:"description"`
 	CIDPrefix   string      `json:"cid_prefix"`
 	Destination Destination `json:"destination"`
+	Language    string      `json:"language"`
 }
 
 type InboundRoutePatch struct {
 	Description *string      `json:"description,omitempty"`
 	CIDPrefix   *string      `json:"cid_prefix,omitempty"`
 	Destination *Destination `json:"destination,omitempty"`
+	Language    *string      `json:"language,omitempty"`
 }
 
 func inboundPath(tenant int64, did string) string {
@@ -457,6 +463,7 @@ type VoicemailBox struct {
 	SayCID           bool   `json:"say_cid"`
 	Envelope         bool   `json:"envelope"`
 	MaxMessages      int    `json:"max_messages"`
+	Language         string `json:"language"`
 }
 
 type VoicemailBoxInput struct {
@@ -469,6 +476,7 @@ type VoicemailBoxInput struct {
 	SayCID           bool   `json:"say_cid"`
 	Envelope         bool   `json:"envelope"`
 	MaxMessages      int    `json:"max_messages,omitempty"`
+	Language         string `json:"language,omitempty"`
 }
 
 type VoicemailBoxPatch struct {
@@ -480,6 +488,7 @@ type VoicemailBoxPatch struct {
 	SayCID           *bool   `json:"say_cid,omitempty"`
 	Envelope         *bool   `json:"envelope,omitempty"`
 	MaxMessages      *int    `json:"max_messages,omitempty"`
+	Language         *string `json:"language,omitempty"`
 }
 
 func (c *Client) CreateVoicemailBox(ctx context.Context, tenant int64, in VoicemailBoxInput) (VoicemailBox, error) {
