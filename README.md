@@ -27,8 +27,9 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 | `apipbx_blacklist_entry` | `<tenant id>/<id>` | A caller number (digits, a leading + is dropped) whose calls from trunks are diverted. |
 | `apipbx_blacklist_settings` | `<tenant id>` | One per tenant: `block_unknown` also diverts withheld caller ids; `destination_type`/`destination_id` say where diverted calls go (hangup by default). Destroying it restores the defaults. |
 | `apipbx_queue` | `<tenant id>/<id>` | Queues: `strategy`, `agent_timeout`, `retry`, `wrapup_time`, `max_wait`, `max_callers`, `join_empty`, `leave_when_empty`, announcements, `music_on_hold`, `members` (`extension_id`, `penalty`, `dynamic`: in the queue only while logged in with `*45`) and `timeout_type`/`timeout_id`. Use PJSIP extensions as agents. Dialable by `number` and a destination (`queue`). |
-| `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail, time_condition, ivr, queue or hangup). |
-| `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail, time_condition, ivr, queue or hangup). |
+| `apipbx_conference` | `<tenant id>/<id>` | A room dialled by `number`: `pin` (callers must enter it; empty = open), `admin_pin` (admins can lock the room and kick the last caller), `max_members` (0 = no limit), `mute_on_join`. A destination (`conference`). |
+| `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail, time_condition, ivr, queue, conference or hangup). |
+| `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail, time_condition, ivr, queue, conference or hangup). |
 | `apipbx_outbound_route` | `<tenant id>/<id>` | `patterns` (prefix, match, prepend) and `trunks` in failover order. |
 
 Ids are strings so resources can reference each other (`members = [apipbx_extension.a.id]`).

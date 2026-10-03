@@ -840,3 +840,49 @@ func (c *Client) UpdateCallQueue(ctx context.Context, tenant, id int64, p CallQu
 func (c *Client) DeleteCallQueue(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "queues"), id))
 }
+
+// ---- conferences
+
+type Conference struct {
+	ID         int64  `json:"id"`
+	TenantID   int64  `json:"tenant_id"`
+	Number     string `json:"number"`
+	Name       string `json:"name"`
+	PIN        string `json:"pin"`
+	AdminPIN   string `json:"admin_pin"`
+	MaxMembers int    `json:"max_members"`
+	MuteOnJoin bool   `json:"mute_on_join"`
+}
+
+type ConferenceInput struct {
+	Number     string `json:"number"`
+	Name       string `json:"name"`
+	PIN        string `json:"pin"`
+	AdminPIN   string `json:"admin_pin"`
+	MaxMembers int    `json:"max_members"`
+	MuteOnJoin bool   `json:"mute_on_join"`
+}
+
+type ConferencePatch struct {
+	Name       *string `json:"name,omitempty"`
+	PIN        *string `json:"pin,omitempty"`
+	AdminPIN   *string `json:"admin_pin,omitempty"`
+	MaxMembers *int    `json:"max_members,omitempty"`
+	MuteOnJoin *bool   `json:"mute_on_join,omitempty"`
+}
+
+func (c *Client) CreateConference(ctx context.Context, tenant int64, in ConferenceInput) (Conference, error) {
+	return create[Conference](ctx, c, tp(tenant, "conferences"), in)
+}
+
+func (c *Client) GetConference(ctx context.Context, tenant, id int64) (Conference, error) {
+	return get[Conference](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "conferences"), id))
+}
+
+func (c *Client) UpdateConference(ctx context.Context, tenant, id int64, p ConferencePatch) (Conference, error) {
+	return patch[Conference](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "conferences"), id), p)
+}
+
+func (c *Client) DeleteConference(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "conferences"), id))
+}

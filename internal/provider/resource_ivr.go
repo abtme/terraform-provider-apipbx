@@ -47,7 +47,7 @@ func (r *ivrResource) Metadata(_ context.Context, req resource.MetadataRequest, 
 }
 
 func (r *ivrResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	dest := "extension, ring_group, voicemail, time_condition, ivr, queue or hangup."
+	dest := "extension, ring_group, voicemail, time_condition, ivr, queue, conference or hangup."
 	resp.Schema = schema.Schema{
 		Description: "An IVR menu. Import with \"<tenant id>/<id>\".",
 		Attributes: map[string]schema.Attribute{

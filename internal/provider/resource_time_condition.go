@@ -35,7 +35,7 @@ func (r *timeConditionResource) Metadata(_ context.Context, req resource.Metadat
 }
 
 func (r *timeConditionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	dest := "extension, ring_group, voicemail, time_condition, ivr, queue or hangup."
+	dest := "extension, ring_group, voicemail, time_condition, ivr, queue, conference or hangup."
 	resp.Schema = schema.Schema{
 		Description: "Sends calls to one destination while a time group matches and to another otherwise. Import with \"<tenant id>/<id>\".",
 		Attributes: map[string]schema.Attribute{
