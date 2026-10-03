@@ -48,7 +48,7 @@ func (r *announcementResource) Schema(_ context.Context, _ resource.SchemaReques
 			"name":         schema.StringAttribute{Required: true},
 			"recording_id": schema.StringAttribute{Required: true, Description: "Id of an apipbx_recording."},
 			"next_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
-				Description: "Where the call goes afterwards: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup."},
+				Description: "Where the call goes afterwards: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group or hangup."},
 			"next_id": schema.StringAttribute{Optional: true},
 		}}
 }
@@ -254,7 +254,7 @@ func (r *callerIDResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"name_prefix": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Put before the caller's name (up to 20 characters)."},
 			"number":      schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Replaces the caller's number (digits, optional leading +)."},
 			"next_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
-				Description: "Where the call goes afterwards: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup."},
+				Description: "Where the call goes afterwards: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group or hangup."},
 			"next_id": schema.StringAttribute{Optional: true},
 		}}
 }

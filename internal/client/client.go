@@ -1022,3 +1022,40 @@ func (c *Client) UpdateSpeedDial(ctx context.Context, tenant, id int64, p SpeedD
 func (c *Client) DeleteSpeedDial(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "speed-dials"), id))
 }
+
+// ---- paging groups
+
+type PagingGroup struct {
+	ID       int64   `json:"id"`
+	TenantID int64   `json:"tenant_id"`
+	Number   string  `json:"number"`
+	Name     string  `json:"name"`
+	Duplex   bool    `json:"duplex"`
+	Members  []int64 `json:"members"`
+}
+
+type PagingGroupInput struct {
+	Number  string  `json:"number"`
+	Name    string  `json:"name"`
+	Duplex  bool    `json:"duplex"`
+	Members []int64 `json:"members"`
+}
+
+type PagingGroupPatch struct {
+	Name    *string  `json:"name,omitempty"`
+	Duplex  *bool    `json:"duplex,omitempty"`
+	Members *[]int64 `json:"members,omitempty"`
+}
+
+func (c *Client) CreatePagingGroup(ctx context.Context, tenant int64, in PagingGroupInput) (PagingGroup, error) {
+	return create[PagingGroup](ctx, c, tp(tenant, "paging-groups"), in)
+}
+func (c *Client) GetPagingGroup(ctx context.Context, tenant, id int64) (PagingGroup, error) {
+	return get[PagingGroup](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "paging-groups"), id))
+}
+func (c *Client) UpdatePagingGroup(ctx context.Context, tenant, id int64, p PagingGroupPatch) (PagingGroup, error) {
+	return patch[PagingGroup](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "paging-groups"), id), p)
+}
+func (c *Client) DeletePagingGroup(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "paging-groups"), id))
+}

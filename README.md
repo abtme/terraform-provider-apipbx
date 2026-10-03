@@ -32,6 +32,7 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 | `apipbx_misc_destination` | `<tenant id>/<id>` | A `number` (internal, or external through the outbound routes) usable as a destination (`misc_destination`). |
 | `apipbx_caller_id_step` | `<tenant id>/<id>` | Changes the caller id (`name_prefix` and/or `number`), then continues to `next_type`/`next_id`. A destination (`set_caller_id`). |
 | `apipbx_speed_dial` | `<tenant id>/<id>` | `code` (1-4 digits) and `number`: extensions dial `*0` and the code. |
+| `apipbx_paging_group` | `<tenant id>/<id>` | Dialling `number` pages the idle `members` (extension ids) not on DND; their phones are asked to answer by themselves. `duplex` lets them talk back. A destination (`paging_group`). |
 | `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup). |
 | `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup). |
 | `apipbx_outbound_route` | `<tenant id>/<id>` | `patterns` (prefix, match, prepend) and `trunks` in failover order. |
