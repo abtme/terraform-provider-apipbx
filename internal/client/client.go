@@ -1060,6 +1060,40 @@ func (c *Client) DeletePagingGroup(ctx context.Context, tenant, id int64) error 
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "paging-groups"), id))
 }
 
+// ---- voicemail groups
+
+type VoicemailGroup struct {
+	ID       int64   `json:"id"`
+	TenantID int64   `json:"tenant_id"`
+	Number   string  `json:"number"`
+	Name     string  `json:"name"`
+	Boxes    []int64 `json:"boxes"`
+}
+
+type VoicemailGroupInput struct {
+	Number string  `json:"number"`
+	Name   string  `json:"name"`
+	Boxes  []int64 `json:"boxes"`
+}
+
+type VoicemailGroupPatch struct {
+	Name  *string  `json:"name,omitempty"`
+	Boxes *[]int64 `json:"boxes,omitempty"`
+}
+
+func (c *Client) CreateVoicemailGroup(ctx context.Context, tenant int64, in VoicemailGroupInput) (VoicemailGroup, error) {
+	return create[VoicemailGroup](ctx, c, tp(tenant, "voicemail-groups"), in)
+}
+func (c *Client) GetVoicemailGroup(ctx context.Context, tenant, id int64) (VoicemailGroup, error) {
+	return get[VoicemailGroup](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-groups"), id))
+}
+func (c *Client) UpdateVoicemailGroup(ctx context.Context, tenant, id int64, p VoicemailGroupPatch) (VoicemailGroup, error) {
+	return patch[VoicemailGroup](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-groups"), id), p)
+}
+func (c *Client) DeleteVoicemailGroup(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-groups"), id))
+}
+
 // ---- follow-me
 
 type FollowMe struct {

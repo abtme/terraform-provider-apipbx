@@ -83,7 +83,7 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					"dynamic":      schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "Only in the queue while its owner is logged in (*45)."},
 				}}},
 			"timeout_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
-				Description: "Where callers go who wait too long or cannot join: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group or hangup."},
+				Description: "Where callers go who wait too long or cannot join: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group, voicemail_group or hangup."},
 			"timeout_id": schema.StringAttribute{Optional: true},
 		}}
 }
