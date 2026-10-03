@@ -30,6 +30,7 @@ type extensionModel struct {
 	Enabled              types.Bool   `tfsdk:"enabled"`
 	VoicemailBoxID       types.String `tfsdk:"voicemail_box_id"`
 	Language             types.String `tfsdk:"language"`
+	Security             types.String `tfsdk:"security"`
 	DND                  types.Bool   `tfsdk:"dnd"`
 	ForwardUnconditional types.String `tfsdk:"forward_unconditional"`
 	ForwardBusy          types.String `tfsdk:"forward_busy"`
@@ -68,6 +69,8 @@ func (r *extensionResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"forward_busy":        schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when the phone is busy."},
 			"forward_no_answer":   schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when nobody answers within ring_time."},
 			"forward_unavailable": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when the phone is not registered."},
+			"security": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("udp"),
+				Description: "How the phone connects: udp (default), tls (SIP over TLS with SRTP) or webrtc (secure WebSocket with DTLS-SRTP, for browsers and softphone apps). tls and webrtc need TLS set up on the server."},
 			"language": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("en"),
 				Description: "The language of the prompts the phone hears: an Asterisk sound directory name such as en, es or pt_BR (install the matching sound package)."},
 			"voicemail_box_id": schema.StringAttribute{Optional: true,
@@ -87,6 +90,7 @@ func (m *extensionModel) set(e client.Extension) {
 	m.RingTime, m.Enabled = types.Int64Value(int64(e.RingTime)), types.BoolValue(e.Enabled)
 	m.DND = types.BoolValue(e.DND)
 	m.Language = types.StringValue(e.Language)
+	m.Security = types.StringValue(e.Security)
 	m.ForwardUnconditional, m.ForwardBusy = types.StringValue(e.ForwardUnconditional), types.StringValue(e.ForwardBusy)
 	m.ForwardNoAnswer, m.ForwardUnavailable = types.StringValue(e.ForwardNoAnswer), types.StringValue(e.ForwardUnavailable)
 	m.VoicemailBoxID = types.StringNull()
@@ -109,7 +113,7 @@ func (r *extensionResource) Create(ctx context.Context, req resource.CreateReque
 	e, err := r.c.CreateExtension(ctx, tenant, client.ExtensionInput{
 		Number: m.Number.ValueString(), Name: m.Name.ValueString(), Tech: m.Tech.ValueString(),
 		Secret: m.Secret.ValueString(), OutboundCID: m.OutboundCID.ValueString(), RingTime: int(m.RingTime.ValueInt64()),
-		VoicemailBoxID: box, Language: m.Language.ValueString(), DND: m.DND.ValueBool(), ForwardUnconditional: m.ForwardUnconditional.ValueString(),
+		VoicemailBoxID: box, Language: m.Language.ValueString(), Security: m.Security.ValueString(), DND: m.DND.ValueBool(), ForwardUnconditional: m.ForwardUnconditional.ValueString(),
 		ForwardBusy: m.ForwardBusy.ValueString(), ForwardNoAnswer: m.ForwardNoAnswer.ValueString(),
 		ForwardUnavailable: m.ForwardUnavailable.ValueString(),
 	})
@@ -157,7 +161,7 @@ func (r *extensionResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	e, err := r.c.UpdateExtension(ctx, tenant, id, client.ExtensionPatch{
 		Name: ptr(m.Name.ValueString()), Secret: ptr(m.Secret.ValueString()), OutboundCID: ptr(m.OutboundCID.ValueString()),
-		RingTime: ptr(int(m.RingTime.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()), VoicemailBoxID: box, Language: ptr(m.Language.ValueString()),
+		RingTime: ptr(int(m.RingTime.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()), VoicemailBoxID: box, Language: ptr(m.Language.ValueString()), Security: ptr(m.Security.ValueString()),
 		DND: ptr(m.DND.ValueBool()), ForwardUnconditional: ptr(m.ForwardUnconditional.ValueString()), ForwardBusy: ptr(m.ForwardBusy.ValueString()),
 		ForwardNoAnswer: ptr(m.ForwardNoAnswer.ValueString()), ForwardUnavailable: ptr(m.ForwardUnavailable.ValueString()),
 	})

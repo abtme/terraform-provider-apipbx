@@ -185,6 +185,7 @@ type Extension struct {
 	// VoicemailBoxID is the extension's mailbox (nil: none).
 	VoicemailBoxID       *int64 `json:"voicemail_box_id"`
 	Language             string `json:"language"`
+	Security             string `json:"security"`
 	DND                  bool   `json:"dnd"`
 	ForwardUnconditional string `json:"forward_unconditional"`
 	ForwardBusy          string `json:"forward_busy"`
@@ -201,6 +202,7 @@ type ExtensionInput struct {
 	RingTime             int    `json:"ring_time,omitempty"`
 	VoicemailBoxID       *int64 `json:"voicemail_box_id,omitempty"`
 	Language             string `json:"language,omitempty"`
+	Security             string `json:"security,omitempty"`
 	DND                  bool   `json:"dnd,omitempty"`
 	ForwardUnconditional string `json:"forward_unconditional,omitempty"`
 	ForwardBusy          string `json:"forward_busy,omitempty"`
@@ -222,6 +224,7 @@ type ExtensionPatch struct {
 	ForwardNoAnswer      *string `json:"forward_no_answer,omitempty"`
 	ForwardUnavailable   *string `json:"forward_unavailable,omitempty"`
 	Language             *string `json:"language,omitempty"`
+	Security             *string `json:"security,omitempty"`
 }
 
 func (c *Client) CreateExtension(ctx context.Context, tenant int64, in ExtensionInput) (Extension, error) {
