@@ -26,6 +26,39 @@ func New(base, token string) *Client {
 // ErrNotFound is returned (wrapped) when the API answers 404.
 var ErrNotFound = errors.New("not found")
 
+// doRaw sends body as is (audio) and decodes a JSON answer into out; with wantBytes it returns the raw answer.
+func (c *Client) doRaw(ctx context.Context, method, path, contentType string, body []byte, out any) ([]byte, error) {
+	var rd io.Reader
+	if body != nil {
+		rd = bytes.NewReader(body)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, c.base+path, rd)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	if contentType != "" {
+		req.Header.Set("Content-Type", contentType)
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	b, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 300 {
+		msg := fmt.Errorf("%s %s: %d: %s", method, path, resp.StatusCode, strings.TrimSpace(string(b)))
+		if resp.StatusCode == http.StatusNotFound {
+			return nil, fmt.Errorf("%w: %w", ErrNotFound, msg)
+		}
+		return nil, msg
+	}
+	if out != nil {
+		return b, json.Unmarshal(b, out)
+	}
+	return b, nil
+}
+
 func (c *Client) do(ctx context.Context, method, path string, in, out any) error {
 	var body io.Reader
 	if in != nil {
@@ -632,4 +665,34 @@ func (c *Client) UpdateRecording(ctx context.Context, tenant, id int64, p Record
 
 func (c *Client) DeleteRecording(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "recordings"), id))
+}
+
+// ---- voicemail greetings
+
+type VoicemailGreeting struct {
+	Type            string  `json:"type"`
+	DurationSeconds float64 `json:"duration_seconds"`
+	SizeBytes       int     `json:"size_bytes"`
+}
+
+func greetingPath(tenant, box int64, kind string) string {
+	return fmt.Sprintf("%s/%d/greetings/%s", tp(tenant, "voicemail-boxes"), box, kind)
+}
+
+func (c *Client) SetVoicemailGreeting(ctx context.Context, tenant, box int64, kind string, wav []byte) (VoicemailGreeting, error) {
+	var g VoicemailGreeting
+	_, err := c.doRaw(ctx, "PUT", greetingPath(tenant, box, kind), "audio/wav", wav, &g)
+	return g, err
+}
+
+func (c *Client) GetVoicemailGreetingAudio(ctx context.Context, tenant, box int64, kind string) ([]byte, error) {
+	return c.doRaw(ctx, "GET", greetingPath(tenant, box, kind), "", nil, nil)
+}
+
+func (c *Client) GetVoicemailGreeting(ctx context.Context, tenant, box int64, kind string) (VoicemailGreeting, error) {
+	return get[VoicemailGreeting](ctx, c, greetingPath(tenant, box, kind)+"/info")
+}
+
+func (c *Client) DeleteVoicemailGreeting(ctx context.Context, tenant, box int64, kind string) error {
+	return c.remove(ctx, greetingPath(tenant, box, kind))
 }

@@ -19,6 +19,13 @@ resource "apipbx_voicemail_box" "reception" {
   attach    = true
 }
 
+resource "apipbx_voicemail_greeting" "reception_away" {
+  tenant_id        = apipbx_tenant.t.id
+  voicemail_box_id = apipbx_voicemail_box.reception.id
+  type             = "unavailable"
+  content_base64   = filebase64("away.wav") # 16-bit PCM, mono, 8000 Hz
+}
+
 resource "apipbx_extension" "a" {
   tenant_id        = apipbx_tenant.t.id
   number           = "1001"
