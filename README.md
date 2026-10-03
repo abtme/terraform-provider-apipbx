@@ -19,8 +19,10 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 | `apipbx_extension` | `<tenant id>/<id>` | `number` and `tech` force a new extension. `secret` is generated when omitted. |
 | `apipbx_trunk` | `<tenant id>/<id>` | `name` and `tech` force a new trunk. A `port` cannot be cleared once set. |
 | `apipbx_voicemail_box` | `<tenant id>/<id>` | Deleting it deletes its messages. `pin` is generated when omitted (leave it out if the owner sets it from the phone). Link it with an extension's `voicemail_box_id`, or use it as a `voicemail` destination. |
-| `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail or hangup). |
-| `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail or hangup). |
+| `apipbx_time_group` | `<tenant id>/<id>` | `ranges` of `start`/`end` (`HH:MM`, end exclusive, `24:00` = end of day, an end before the start runs over midnight), optional `weekdays`, `month_days`, `months`, in an IANA `timezone`. |
+| `apipbx_time_condition` | `<tenant id>/<id>` | `match_type`/`match_id` while the group matches, `no_match_type`/`no_match_id` otherwise; `override` (`none`, `match`, `no_match`) forces a branch. |
+| `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail, time_condition or hangup). |
+| `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail, time_condition or hangup). |
 | `apipbx_outbound_route` | `<tenant id>/<id>` | `patterns` (prefix, match, prepend) and `trunks` in failover order. |
 
 Ids are strings so resources can reference each other (`members = [apipbx_extension.a.id]`).

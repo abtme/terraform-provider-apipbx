@@ -446,3 +446,92 @@ func (c *Client) UpdateVoicemailBox(ctx context.Context, tenant, id int64, p Voi
 func (c *Client) DeleteVoicemailBox(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-boxes"), id))
 }
+
+// ---- time groups and conditions
+
+type TimeRange struct {
+	Start     string   `json:"start"`
+	End       string   `json:"end"`
+	Weekdays  []string `json:"weekdays"`
+	MonthDays []int    `json:"month_days"`
+	Months    []int    `json:"months"`
+}
+
+type TimeGroup struct {
+	ID       int64       `json:"id"`
+	TenantID int64       `json:"tenant_id"`
+	Name     string      `json:"name"`
+	Timezone string      `json:"timezone"`
+	Ranges   []TimeRange `json:"ranges"`
+}
+
+type TimeGroupInput struct {
+	Name     string      `json:"name"`
+	Timezone string      `json:"timezone"`
+	Ranges   []TimeRange `json:"ranges"`
+}
+
+type TimeGroupPatch struct {
+	Name     *string      `json:"name,omitempty"`
+	Timezone *string      `json:"timezone,omitempty"`
+	Ranges   *[]TimeRange `json:"ranges,omitempty"`
+}
+
+func (c *Client) CreateTimeGroup(ctx context.Context, tenant int64, in TimeGroupInput) (TimeGroup, error) {
+	return create[TimeGroup](ctx, c, tp(tenant, "time-groups"), in)
+}
+
+func (c *Client) GetTimeGroup(ctx context.Context, tenant, id int64) (TimeGroup, error) {
+	return get[TimeGroup](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "time-groups"), id))
+}
+
+func (c *Client) UpdateTimeGroup(ctx context.Context, tenant, id int64, p TimeGroupPatch) (TimeGroup, error) {
+	return patch[TimeGroup](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "time-groups"), id), p)
+}
+
+func (c *Client) DeleteTimeGroup(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "time-groups"), id))
+}
+
+type TimeCondition struct {
+	ID          int64       `json:"id"`
+	TenantID    int64       `json:"tenant_id"`
+	Name        string      `json:"name"`
+	TimeGroupID int64       `json:"time_group_id"`
+	Match       Destination `json:"match"`
+	NoMatch     Destination `json:"no_match"`
+	Override    string      `json:"override"`
+	MatchesNow  bool        `json:"matches_now"`
+}
+
+type TimeConditionInput struct {
+	Name        string      `json:"name"`
+	TimeGroupID int64       `json:"time_group_id"`
+	Match       Destination `json:"match"`
+	NoMatch     Destination `json:"no_match"`
+	Override    string      `json:"override,omitempty"`
+}
+
+type TimeConditionPatch struct {
+	Name        *string      `json:"name,omitempty"`
+	TimeGroupID *int64       `json:"time_group_id,omitempty"`
+	Match       *Destination `json:"match,omitempty"`
+	NoMatch     *Destination `json:"no_match,omitempty"`
+	Override    *string      `json:"override,omitempty"`
+}
+
+func (c *Client) CreateTimeCondition(ctx context.Context, tenant int64, in TimeConditionInput) (TimeCondition, error) {
+	return create[TimeCondition](ctx, c, tp(tenant, "time-conditions"), in)
+}
+
+func (c *Client) GetTimeCondition(ctx context.Context, tenant, id int64) (TimeCondition, error) {
+	return get[TimeCondition](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "time-conditions"), id))
+}
+
+func (c *Client) UpdateTimeCondition(ctx context.Context, tenant, id int64, p TimeConditionPatch) (TimeCondition, error) {
+	return patch[TimeCondition](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "time-conditions"), id), p)
+}
+
+func (c *Client) DeleteTimeCondition(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "time-conditions"), id))
+}

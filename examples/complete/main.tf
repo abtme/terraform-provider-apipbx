@@ -86,3 +86,30 @@ resource "apipbx_api_key" "k" {
   name      = "tenant-key"
   tenant_id = apipbx_tenant.t.id
 }
+
+resource "apipbx_time_group" "office" {
+  tenant_id = apipbx_tenant.t.id
+  name      = "Office hours"
+  timezone  = "Europe/London"
+  ranges = [
+    { start = "09:00", end = "17:30", weekdays = ["mon", "tue", "wed", "thu", "fri"] },
+  ]
+}
+
+# Office hours ring the ring group, any other time goes to voicemail.
+resource "apipbx_time_condition" "office" {
+  tenant_id     = apipbx_tenant.t.id
+  name          = "Office"
+  time_group_id = apipbx_time_group.office.id
+  match_type    = "ring_group"
+  match_id      = apipbx_ring_group.g.id
+  no_match_type = "voicemail"
+  no_match_id   = apipbx_voicemail_box.reception.id
+}
+
+resource "apipbx_inbound_route" "office_hours" {
+  tenant_id        = apipbx_tenant.t.id
+  did              = "441234567899"
+  destination_type = "time_condition"
+  destination_id   = apipbx_time_condition.office.id
+}
