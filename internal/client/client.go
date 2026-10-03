@@ -711,3 +711,50 @@ func (c *Client) GetVoicemailGreeting(ctx context.Context, tenant, box int64, ki
 func (c *Client) DeleteVoicemailGreeting(ctx context.Context, tenant, box int64, kind string) error {
 	return c.remove(ctx, greetingPath(tenant, box, kind))
 }
+
+// ---- blacklist
+
+type BlacklistEntry struct {
+	ID          int64  `json:"id"`
+	TenantID    int64  `json:"tenant_id"`
+	Number      string `json:"number"`
+	Description string `json:"description"`
+}
+
+type BlacklistEntryInput struct {
+	Number      string `json:"number"`
+	Description string `json:"description"`
+}
+
+type BlacklistEntryPatch struct {
+	Description *string `json:"description,omitempty"`
+}
+
+func (c *Client) CreateBlacklistEntry(ctx context.Context, tenant int64, in BlacklistEntryInput) (BlacklistEntry, error) {
+	return create[BlacklistEntry](ctx, c, tp(tenant, "blacklist"), in)
+}
+
+func (c *Client) GetBlacklistEntry(ctx context.Context, tenant, id int64) (BlacklistEntry, error) {
+	return get[BlacklistEntry](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "blacklist"), id))
+}
+
+func (c *Client) UpdateBlacklistEntry(ctx context.Context, tenant, id int64, p BlacklistEntryPatch) (BlacklistEntry, error) {
+	return patch[BlacklistEntry](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "blacklist"), id), p)
+}
+
+func (c *Client) DeleteBlacklistEntry(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "blacklist"), id))
+}
+
+type BlacklistSettings struct {
+	BlockUnknown bool        `json:"block_unknown"`
+	Destination  Destination `json:"destination"`
+}
+
+func (c *Client) GetBlacklistSettings(ctx context.Context, tenant int64) (BlacklistSettings, error) {
+	return get[BlacklistSettings](ctx, c, tp(tenant, "blacklist-settings"))
+}
+
+func (c *Client) UpdateBlacklistSettings(ctx context.Context, tenant int64, s BlacklistSettings) (BlacklistSettings, error) {
+	return patch[BlacklistSettings](ctx, c, tp(tenant, "blacklist-settings"), s)
+}
