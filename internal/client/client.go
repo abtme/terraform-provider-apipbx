@@ -548,6 +548,7 @@ type IVR struct {
 	TenantID           int64       `json:"tenant_id"`
 	Name               string      `json:"name"`
 	Announcement       string      `json:"announcement"`
+	RecordingID        *int64      `json:"recording_id"`
 	TimeoutSeconds     int         `json:"timeout_seconds"`
 	MaxRetries         int         `json:"max_retries"`
 	Entries            []IVREntry  `json:"entries"`
@@ -558,6 +559,7 @@ type IVR struct {
 type IVRInput struct {
 	Name               string       `json:"name"`
 	Announcement       string       `json:"announcement"`
+	RecordingID        *int64       `json:"recording_id,omitempty"`
 	TimeoutSeconds     int          `json:"timeout_seconds,omitempty"`
 	MaxRetries         int          `json:"max_retries,omitempty"`
 	Entries            []IVREntry   `json:"entries"`
@@ -568,6 +570,7 @@ type IVRInput struct {
 type IVRPatch struct {
 	Name               *string      `json:"name,omitempty"`
 	Announcement       *string      `json:"announcement,omitempty"`
+	RecordingID        *int64       `json:"recording_id,omitempty"` // 0 removes the recording
 	TimeoutSeconds     *int         `json:"timeout_seconds,omitempty"`
 	MaxRetries         *int         `json:"max_retries,omitempty"`
 	Entries            *[]IVREntry  `json:"entries,omitempty"`
@@ -589,4 +592,44 @@ func (c *Client) UpdateIVR(ctx context.Context, tenant, id int64, p IVRPatch) (I
 
 func (c *Client) DeleteIVR(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "ivrs"), id))
+}
+
+// ---- recordings
+
+type Recording struct {
+	ID              int64   `json:"id"`
+	TenantID        int64   `json:"tenant_id"`
+	Name            string  `json:"name"`
+	Description     string  `json:"description"`
+	DurationSeconds float64 `json:"duration_seconds"`
+	SizeBytes       int     `json:"size_bytes"`
+	SHA256          string  `json:"sha256"`
+}
+
+type RecordingInput struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Audio       []byte `json:"audio"` // base64 in JSON
+}
+
+type RecordingPatch struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Audio       *[]byte `json:"audio,omitempty"`
+}
+
+func (c *Client) CreateRecording(ctx context.Context, tenant int64, in RecordingInput) (Recording, error) {
+	return create[Recording](ctx, c, tp(tenant, "recordings"), in)
+}
+
+func (c *Client) GetRecording(ctx context.Context, tenant, id int64) (Recording, error) {
+	return get[Recording](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "recordings"), id))
+}
+
+func (c *Client) UpdateRecording(ctx context.Context, tenant, id int64, p RecordingPatch) (Recording, error) {
+	return patch[Recording](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "recordings"), id), p)
+}
+
+func (c *Client) DeleteRecording(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "recordings"), id))
 }

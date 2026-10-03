@@ -114,11 +114,19 @@ resource "apipbx_inbound_route" "office_hours" {
   destination_id   = apipbx_time_condition.office.id
 }
 
+# The greeting: 16-bit PCM, mono, 8000 Hz WAV
+# (ffmpeg -i in.mp3 -ar 8000 -ac 1 -c:a pcm_s16le welcome.wav).
+resource "apipbx_recording" "welcome" {
+  tenant_id      = apipbx_tenant.t.id
+  name           = "Welcome"
+  content_base64 = filebase64("welcome.wav")
+}
+
 # A menu: 1 rings reception, 2 the ring group; silence or an unknown key ends in voicemail.
 resource "apipbx_ivr" "main" {
   tenant_id       = apipbx_tenant.t.id
   name            = "Main menu"
-  announcement    = "custom/welcome" # a sound file on the Asterisk host; empty plays nothing
+  recording_id    = apipbx_recording.welcome.id # or announcement = "custom/welcome" for a sound file on the Asterisk host
   timeout_seconds = 8
   entries = [
     { digit = "1", destination_type = "extension", destination_id = apipbx_extension.a.id },

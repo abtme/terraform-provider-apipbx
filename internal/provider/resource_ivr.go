@@ -30,6 +30,7 @@ type ivrModel struct {
 	TenantID       types.String    `tfsdk:"tenant_id"`
 	Name           types.String    `tfsdk:"name"`
 	Announcement   types.String    `tfsdk:"announcement"`
+	RecordingID    types.String    `tfsdk:"recording_id"`
 	TimeoutSeconds types.Int64     `tfsdk:"timeout_seconds"`
 	MaxRetries     types.Int64     `tfsdk:"max_retries"`
 	Entries        []ivrEntryModel `tfsdk:"entries"`
@@ -55,6 +56,7 @@ func (r *ivrResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"name":      schema.StringAttribute{Required: true},
 			"announcement": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""),
 				Description: "Asterisk sound name(s) joined with &, such as custom/welcome; empty plays nothing. Sounds are server-wide."},
+			"recording_id":    schema.StringAttribute{Optional: true, Description: "Id of an apipbx_recording to play instead of the announcement."},
 			"timeout_seconds": schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(10), Description: "Seconds to wait for a key (1-60)."},
 			"max_retries":     schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(3), Description: "Unknown keys, and silences, allowed before giving up (1-10)."},
 			"entries": schema.ListNestedAttribute{Optional: true, Computed: true, Description: "Keys of the menu (at most 12).",
@@ -79,6 +81,10 @@ func (r *ivrResource) Configure(_ context.Context, req resource.ConfigureRequest
 func (m *ivrModel) set(v client.IVR) {
 	m.ID, m.TenantID = idString(v.ID), idString(v.TenantID)
 	m.Name, m.Announcement = types.StringValue(v.Name), types.StringValue(v.Announcement)
+	m.RecordingID = types.StringNull()
+	if v.RecordingID != nil {
+		m.RecordingID = idString(*v.RecordingID)
+	}
 	m.TimeoutSeconds, m.MaxRetries = types.Int64Value(int64(v.TimeoutSeconds)), types.Int64Value(int64(v.MaxRetries))
 	m.Entries = make([]ivrEntryModel, 0, len(v.Entries))
 	for _, e := range v.Entries {
@@ -105,10 +111,14 @@ func (r *ivrResource) Create(ctx context.Context, req resource.CreateRequest, re
 	entries := m.entries(&resp.Diagnostics)
 	to := toDestination(&resp.Diagnostics, m.TimeoutType, m.TimeoutID)
 	inv := toDestination(&resp.Diagnostics, m.InvalidType, m.InvalidID)
+	var rec *int64
+	if !m.RecordingID.IsNull() {
+		rec = ptr(parseID(&resp.Diagnostics, "recording_id", m.RecordingID))
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	v, err := r.c.CreateIVR(ctx, tenant, client.IVRInput{Name: m.Name.ValueString(), Announcement: m.Announcement.ValueString(),
+	v, err := r.c.CreateIVR(ctx, tenant, client.IVRInput{Name: m.Name.ValueString(), Announcement: m.Announcement.ValueString(), RecordingID: rec,
 		TimeoutSeconds: int(m.TimeoutSeconds.ValueInt64()), MaxRetries: int(m.MaxRetries.ValueInt64()),
 		Entries: entries, TimeoutDestination: to, InvalidDestination: inv})
 	if err != nil {
@@ -142,10 +152,14 @@ func (r *ivrResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	entries := m.entries(&resp.Diagnostics)
 	to := toDestination(&resp.Diagnostics, m.TimeoutType, m.TimeoutID)
 	inv := toDestination(&resp.Diagnostics, m.InvalidType, m.InvalidID)
+	rec := ptr(int64(0)) // 0 removes the recording
+	if !m.RecordingID.IsNull() {
+		rec = ptr(parseID(&resp.Diagnostics, "recording_id", m.RecordingID))
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	v, err := r.c.UpdateIVR(ctx, tenant, id, client.IVRPatch{Name: ptr(m.Name.ValueString()), Announcement: ptr(m.Announcement.ValueString()),
+	v, err := r.c.UpdateIVR(ctx, tenant, id, client.IVRPatch{Name: ptr(m.Name.ValueString()), Announcement: ptr(m.Announcement.ValueString()), RecordingID: rec,
 		TimeoutSeconds: ptr(int(m.TimeoutSeconds.ValueInt64())), MaxRetries: ptr(int(m.MaxRetries.ValueInt64())),
 		Entries: &entries, TimeoutDestination: to, InvalidDestination: inv})
 	if err != nil {
