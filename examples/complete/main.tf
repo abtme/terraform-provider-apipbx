@@ -113,3 +113,19 @@ resource "apipbx_inbound_route" "office_hours" {
   destination_type = "time_condition"
   destination_id   = apipbx_time_condition.office.id
 }
+
+# A menu: 1 rings reception, 2 the ring group; silence or an unknown key ends in voicemail.
+resource "apipbx_ivr" "main" {
+  tenant_id       = apipbx_tenant.t.id
+  name            = "Main menu"
+  announcement    = "custom/welcome" # a sound file on the Asterisk host; empty plays nothing
+  timeout_seconds = 8
+  entries = [
+    { digit = "1", destination_type = "extension", destination_id = apipbx_extension.a.id },
+    { digit = "2", destination_type = "ring_group", destination_id = apipbx_ring_group.g.id },
+  ]
+  timeout_type = "voicemail"
+  timeout_id   = apipbx_voicemail_box.reception.id
+  invalid_type = "voicemail"
+  invalid_id   = apipbx_voicemail_box.reception.id
+}

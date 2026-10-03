@@ -535,3 +535,58 @@ func (c *Client) UpdateTimeCondition(ctx context.Context, tenant, id int64, p Ti
 func (c *Client) DeleteTimeCondition(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "time-conditions"), id))
 }
+
+// ---- IVRs
+
+type IVREntry struct {
+	Digit       string      `json:"digit"`
+	Destination Destination `json:"destination"`
+}
+
+type IVR struct {
+	ID                 int64       `json:"id"`
+	TenantID           int64       `json:"tenant_id"`
+	Name               string      `json:"name"`
+	Announcement       string      `json:"announcement"`
+	TimeoutSeconds     int         `json:"timeout_seconds"`
+	MaxRetries         int         `json:"max_retries"`
+	Entries            []IVREntry  `json:"entries"`
+	TimeoutDestination Destination `json:"timeout_destination"`
+	InvalidDestination Destination `json:"invalid_destination"`
+}
+
+type IVRInput struct {
+	Name               string       `json:"name"`
+	Announcement       string       `json:"announcement"`
+	TimeoutSeconds     int          `json:"timeout_seconds,omitempty"`
+	MaxRetries         int          `json:"max_retries,omitempty"`
+	Entries            []IVREntry   `json:"entries"`
+	TimeoutDestination *Destination `json:"timeout_destination,omitempty"`
+	InvalidDestination *Destination `json:"invalid_destination,omitempty"`
+}
+
+type IVRPatch struct {
+	Name               *string      `json:"name,omitempty"`
+	Announcement       *string      `json:"announcement,omitempty"`
+	TimeoutSeconds     *int         `json:"timeout_seconds,omitempty"`
+	MaxRetries         *int         `json:"max_retries,omitempty"`
+	Entries            *[]IVREntry  `json:"entries,omitempty"`
+	TimeoutDestination *Destination `json:"timeout_destination,omitempty"`
+	InvalidDestination *Destination `json:"invalid_destination,omitempty"`
+}
+
+func (c *Client) CreateIVR(ctx context.Context, tenant int64, in IVRInput) (IVR, error) {
+	return create[IVR](ctx, c, tp(tenant, "ivrs"), in)
+}
+
+func (c *Client) GetIVR(ctx context.Context, tenant, id int64) (IVR, error) {
+	return get[IVR](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "ivrs"), id))
+}
+
+func (c *Client) UpdateIVR(ctx context.Context, tenant, id int64, p IVRPatch) (IVR, error) {
+	return patch[IVR](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "ivrs"), id), p)
+}
+
+func (c *Client) DeleteIVR(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "ivrs"), id))
+}

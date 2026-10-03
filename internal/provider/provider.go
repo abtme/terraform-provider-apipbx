@@ -57,7 +57,7 @@ func (p *apipbxProvider) Resources(context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewTenantResource, NewAPIKeyResource, NewExtensionResource, NewTrunkResource,
 		NewRingGroupResource, NewInboundRouteResource, NewOutboundRouteResource, NewVoicemailBoxResource,
-		NewTimeGroupResource, NewTimeConditionResource,
+		NewTimeGroupResource, NewTimeConditionResource, NewIVRResource,
 	}
 }
 
