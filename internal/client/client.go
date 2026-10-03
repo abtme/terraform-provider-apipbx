@@ -1147,3 +1147,25 @@ func (c *Client) SetCallRecordingPolicy(ctx context.Context, tenant, ext int64, 
 func (c *Client) GetCallRecordingPolicy(ctx context.Context, tenant, ext int64) (CallRecordingPolicy, error) {
 	return get[CallRecordingPolicy](ctx, c, fmt.Sprintf("%s/%d/call-recording", tp(tenant, "extensions"), ext))
 }
+
+// ---- parking lot
+
+type ParkingLot struct {
+	ParkNumber string `json:"park_number"`
+	FirstSlot  int    `json:"first_slot"`
+	Slots      int    `json:"slots"`
+}
+
+func (c *Client) SetParkingLot(ctx context.Context, tenant int64, in ParkingLot) (ParkingLot, error) {
+	var l ParkingLot
+	err := c.do(ctx, "PUT", fmt.Sprintf("/v1/tenants/%d/parking", tenant), in, &l)
+	return l, err
+}
+
+func (c *Client) GetParkingLot(ctx context.Context, tenant int64) (ParkingLot, error) {
+	return get[ParkingLot](ctx, c, fmt.Sprintf("/v1/tenants/%d/parking", tenant))
+}
+
+func (c *Client) DeleteParkingLot(ctx context.Context, tenant int64) error {
+	return c.remove(ctx, fmt.Sprintf("/v1/tenants/%d/parking", tenant))
+}
