@@ -16,7 +16,7 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 |---|---|---|
 | `apipbx_tenant` | `<tenant id>` | Deleting it deletes everything in it. Platform key only. |
 | `apipbx_api_key` | `<key id>` | The secret (`key`, sensitive) exists only in the state of the apply that created it. |
-| `apipbx_extension` | `<tenant id>/<id>` | `number` and `tech` force a new extension. `secret` is generated when omitted. |
+| `apipbx_extension` | `<tenant id>/<id>` | `number` and `tech` force a new extension. `secret` is generated when omitted. `dnd` and the four `forward_*` numbers (always, busy, no answer, unreachable) are also changed by the phone's `*78`/`*79`/`*72`/`*73`, which shows as drift. |
 | `apipbx_trunk` | `<tenant id>/<id>` | `name` and `tech` force a new trunk. A `port` cannot be cleared once set. |
 | `apipbx_voicemail_box` | `<tenant id>/<id>` | Deleting it deletes its messages. `pin` is generated when omitted (leave it out if the owner sets it from the phone). Link it with an extension's `voicemail_box_id`, or use it as a `voicemail` destination. |
 | `apipbx_time_group` | `<tenant id>/<id>` | `ranges` of `start`/`end` (`HH:MM`, end exclusive, `24:00` = end of day, an end before the start runs over midnight), optional `weekdays`, `month_days`, `months`, in an IANA `timezone`. |

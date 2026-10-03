@@ -183,17 +183,27 @@ type Extension struct {
 	RingTime    int    `json:"ring_time"`
 	Enabled     bool   `json:"enabled"`
 	// VoicemailBoxID is the extension's mailbox (nil: none).
-	VoicemailBoxID *int64 `json:"voicemail_box_id"`
+	VoicemailBoxID       *int64 `json:"voicemail_box_id"`
+	DND                  bool   `json:"dnd"`
+	ForwardUnconditional string `json:"forward_unconditional"`
+	ForwardBusy          string `json:"forward_busy"`
+	ForwardNoAnswer      string `json:"forward_no_answer"`
+	ForwardUnavailable   string `json:"forward_unavailable"`
 }
 
 type ExtensionInput struct {
-	Number         string `json:"number"`
-	Name           string `json:"name"`
-	Tech           string `json:"tech,omitempty"`
-	Secret         string `json:"secret,omitempty"` // generated when empty
-	OutboundCID    string `json:"outbound_cid"`
-	RingTime       int    `json:"ring_time,omitempty"`
-	VoicemailBoxID *int64 `json:"voicemail_box_id,omitempty"`
+	Number               string `json:"number"`
+	Name                 string `json:"name"`
+	Tech                 string `json:"tech,omitempty"`
+	Secret               string `json:"secret,omitempty"` // generated when empty
+	OutboundCID          string `json:"outbound_cid"`
+	RingTime             int    `json:"ring_time,omitempty"`
+	VoicemailBoxID       *int64 `json:"voicemail_box_id,omitempty"`
+	DND                  bool   `json:"dnd,omitempty"`
+	ForwardUnconditional string `json:"forward_unconditional,omitempty"`
+	ForwardBusy          string `json:"forward_busy,omitempty"`
+	ForwardNoAnswer      string `json:"forward_no_answer,omitempty"`
+	ForwardUnavailable   string `json:"forward_unavailable,omitempty"`
 }
 
 type ExtensionPatch struct {
@@ -203,7 +213,12 @@ type ExtensionPatch struct {
 	RingTime    *int    `json:"ring_time,omitempty"`
 	Enabled     *bool   `json:"enabled,omitempty"`
 	// VoicemailBoxID links a mailbox; 0 removes the link.
-	VoicemailBoxID *int64 `json:"voicemail_box_id,omitempty"`
+	VoicemailBoxID       *int64  `json:"voicemail_box_id,omitempty"`
+	DND                  *bool   `json:"dnd,omitempty"`
+	ForwardUnconditional *string `json:"forward_unconditional,omitempty"`
+	ForwardBusy          *string `json:"forward_busy,omitempty"`
+	ForwardNoAnswer      *string `json:"forward_no_answer,omitempty"`
+	ForwardUnavailable   *string `json:"forward_unavailable,omitempty"`
 }
 
 func (c *Client) CreateExtension(ctx context.Context, tenant int64, in ExtensionInput) (Extension, error) {

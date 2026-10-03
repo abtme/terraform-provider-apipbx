@@ -18,17 +18,22 @@ import (
 type extensionResource struct{ c *client.Client }
 
 type extensionModel struct {
-	ID             types.String `tfsdk:"id"`
-	TenantID       types.String `tfsdk:"tenant_id"`
-	Number         types.String `tfsdk:"number"`
-	Name           types.String `tfsdk:"name"`
-	Tech           types.String `tfsdk:"tech"`
-	Secret         types.String `tfsdk:"secret"`
-	Username       types.String `tfsdk:"username"`
-	OutboundCID    types.String `tfsdk:"outbound_cid"`
-	RingTime       types.Int64  `tfsdk:"ring_time"`
-	Enabled        types.Bool   `tfsdk:"enabled"`
-	VoicemailBoxID types.String `tfsdk:"voicemail_box_id"`
+	ID                   types.String `tfsdk:"id"`
+	TenantID             types.String `tfsdk:"tenant_id"`
+	Number               types.String `tfsdk:"number"`
+	Name                 types.String `tfsdk:"name"`
+	Tech                 types.String `tfsdk:"tech"`
+	Secret               types.String `tfsdk:"secret"`
+	Username             types.String `tfsdk:"username"`
+	OutboundCID          types.String `tfsdk:"outbound_cid"`
+	RingTime             types.Int64  `tfsdk:"ring_time"`
+	Enabled              types.Bool   `tfsdk:"enabled"`
+	VoicemailBoxID       types.String `tfsdk:"voicemail_box_id"`
+	DND                  types.Bool   `tfsdk:"dnd"`
+	ForwardUnconditional types.String `tfsdk:"forward_unconditional"`
+	ForwardBusy          types.String `tfsdk:"forward_busy"`
+	ForwardNoAnswer      types.String `tfsdk:"forward_no_answer"`
+	ForwardUnavailable   types.String `tfsdk:"forward_unavailable"`
 }
 
 func NewExtensionResource() resource.Resource { return &extensionResource{} }
@@ -55,6 +60,13 @@ func (r *extensionResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"outbound_cid": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
 			"ring_time":    schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(20)},
 			"enabled":      schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true)},
+			"dnd": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false),
+				Description: "Do not disturb: callers go to the voicemail box (busy tone without one). The phone's *78 and *79 change it, which shows as drift."},
+			"forward_unconditional": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""),
+				Description: "Forward every call to this number (internal, or external through the outbound routes); empty is off. The phone's *72 and *73 change it."},
+			"forward_busy":        schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when the phone is busy."},
+			"forward_no_answer":   schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when nobody answers within ring_time."},
+			"forward_unavailable": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when the phone is not registered."},
 			"voicemail_box_id": schema.StringAttribute{Optional: true,
 				Description: "Mailbox for busy, unanswered and unreachable calls; the phone's *97 opens it."},
 		}}
@@ -70,6 +82,9 @@ func (m *extensionModel) set(e client.Extension) {
 	m.Secret, m.Username = types.StringValue(e.Secret), types.StringValue(e.Username)
 	m.OutboundCID = types.StringValue(e.OutboundCID)
 	m.RingTime, m.Enabled = types.Int64Value(int64(e.RingTime)), types.BoolValue(e.Enabled)
+	m.DND = types.BoolValue(e.DND)
+	m.ForwardUnconditional, m.ForwardBusy = types.StringValue(e.ForwardUnconditional), types.StringValue(e.ForwardBusy)
+	m.ForwardNoAnswer, m.ForwardUnavailable = types.StringValue(e.ForwardNoAnswer), types.StringValue(e.ForwardUnavailable)
 	m.VoicemailBoxID = types.StringNull()
 	if e.VoicemailBoxID != nil {
 		m.VoicemailBoxID = idString(*e.VoicemailBoxID)
@@ -90,7 +105,9 @@ func (r *extensionResource) Create(ctx context.Context, req resource.CreateReque
 	e, err := r.c.CreateExtension(ctx, tenant, client.ExtensionInput{
 		Number: m.Number.ValueString(), Name: m.Name.ValueString(), Tech: m.Tech.ValueString(),
 		Secret: m.Secret.ValueString(), OutboundCID: m.OutboundCID.ValueString(), RingTime: int(m.RingTime.ValueInt64()),
-		VoicemailBoxID: box,
+		VoicemailBoxID: box, DND: m.DND.ValueBool(), ForwardUnconditional: m.ForwardUnconditional.ValueString(),
+		ForwardBusy: m.ForwardBusy.ValueString(), ForwardNoAnswer: m.ForwardNoAnswer.ValueString(),
+		ForwardUnavailable: m.ForwardUnavailable.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create extension", err.Error())
@@ -137,6 +154,8 @@ func (r *extensionResource) Update(ctx context.Context, req resource.UpdateReque
 	e, err := r.c.UpdateExtension(ctx, tenant, id, client.ExtensionPatch{
 		Name: ptr(m.Name.ValueString()), Secret: ptr(m.Secret.ValueString()), OutboundCID: ptr(m.OutboundCID.ValueString()),
 		RingTime: ptr(int(m.RingTime.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()), VoicemailBoxID: box,
+		DND: ptr(m.DND.ValueBool()), ForwardUnconditional: ptr(m.ForwardUnconditional.ValueString()), ForwardBusy: ptr(m.ForwardBusy.ValueString()),
+		ForwardNoAnswer: ptr(m.ForwardNoAnswer.ValueString()), ForwardUnavailable: ptr(m.ForwardUnavailable.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update extension", err.Error())
