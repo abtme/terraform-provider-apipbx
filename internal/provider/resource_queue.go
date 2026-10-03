@@ -73,7 +73,7 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"announce_position":  schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false)},
 			"announce_hold_time": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false)},
 			"announce_frequency": schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(0), Description: "Seconds between announcements; needed when a position or hold time is announced."},
-			"music_on_hold":      schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("default"), Description: "A music on hold class on the Asterisk host."},
+			"music_on_hold":      schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("default"), Description: "A music on hold class: one of the tenant's own (apipbx_moh_class) or one Asterisk has itself, like default."},
 			"members": schema.ListNestedAttribute{Optional: true, Computed: true, Description: "Agents. Use PJSIP extensions: IAX2 phones report no device state, so queues do not ring them reliably.",
 				Default: listdefault.StaticValue(types.ListValueMust(types.ObjectType{AttrTypes: map[string]attr.Type{
 					"extension_id": types.StringType, "penalty": types.Int64Type, "dynamic": types.BoolType}}, []attr.Value{})),

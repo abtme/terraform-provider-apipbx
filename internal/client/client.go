@@ -1096,3 +1096,37 @@ func (c *Client) GetFollowMe(ctx context.Context, tenant, ext int64) (FollowMe, 
 func (c *Client) DeleteFollowMe(ctx context.Context, tenant, ext int64) error {
 	return c.remove(ctx, followMePath(tenant, ext))
 }
+
+// ---- music on hold classes
+
+type MohClass struct {
+	ID         int64   `json:"id"`
+	TenantID   int64   `json:"tenant_id"`
+	Name       string  `json:"name"`
+	Random     bool    `json:"random"`
+	Recordings []int64 `json:"recordings"`
+}
+
+type MohClassInput struct {
+	Name       string  `json:"name"`
+	Random     bool    `json:"random"`
+	Recordings []int64 `json:"recordings"`
+}
+
+type MohClassPatch struct {
+	Random     *bool    `json:"random,omitempty"`
+	Recordings *[]int64 `json:"recordings,omitempty"`
+}
+
+func (c *Client) CreateMohClass(ctx context.Context, tenant int64, in MohClassInput) (MohClass, error) {
+	return create[MohClass](ctx, c, tp(tenant, "moh-classes"), in)
+}
+func (c *Client) GetMohClass(ctx context.Context, tenant, id int64) (MohClass, error) {
+	return get[MohClass](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "moh-classes"), id))
+}
+func (c *Client) UpdateMohClass(ctx context.Context, tenant, id int64, p MohClassPatch) (MohClass, error) {
+	return patch[MohClass](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "moh-classes"), id), p)
+}
+func (c *Client) DeleteMohClass(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "moh-classes"), id))
+}

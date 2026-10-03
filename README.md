@@ -34,6 +34,7 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 | `apipbx_speed_dial` | `<tenant id>/<id>` | `code` (1-4 digits) and `number`: extensions dial `*0` and the code. |
 | `apipbx_paging_group` | `<tenant id>/<id>` | Dialling `number` pages the idle `members` (extension ids) not on DND; their phones are asked to answer by themselves. `duplex` lets them talk back. A destination (`paging_group`). |
 | `apipbx_follow_me` | `<tenant id>/<extension id>` | An extension's follow-me: `numbers` (1-5, internal or external) ring together with the phone after `prering_seconds`; `confirm` makes an answerer press 1. |
+| `apipbx_moh_class` | `<tenant id>/<id>` | A music on hold class: `recordings` (ids) played in order, or shuffled with `random`. A queue plays it by naming it in `music_on_hold`; `name` cannot change. |
 | `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup). |
 | `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup). |
 | `apipbx_outbound_route` | `<tenant id>/<id>` | `patterns` (prefix, match, prepend) and `trunks` in failover order. |
