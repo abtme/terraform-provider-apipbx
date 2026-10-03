@@ -994,12 +994,14 @@ func (c *Client) DeleteCallerIDStep(ctx context.Context, tenant, id int64) error
 type SpeedDial struct {
 	ID          int64  `json:"id"`
 	TenantID    int64  `json:"tenant_id"`
+	ExtensionID *int64 `json:"extension_id"`
 	Code        string `json:"code"`
 	Number      string `json:"number"`
 	Description string `json:"description"`
 }
 
 type SpeedDialInput struct {
+	ExtensionID *int64 `json:"extension_id,omitempty"`
 	Code        string `json:"code"`
 	Number      string `json:"number"`
 	Description string `json:"description"`

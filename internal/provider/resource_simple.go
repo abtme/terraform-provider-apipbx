@@ -341,6 +341,7 @@ type speedDialResource struct{ c *client.Client }
 type speedDialModel struct {
 	ID          types.String `tfsdk:"id"`
 	TenantID    types.String `tfsdk:"tenant_id"`
+	ExtensionID types.String `tfsdk:"extension_id"`
 	Code        types.String `tfsdk:"code"`
 	Number      types.String `tfsdk:"number"`
 	Description types.String `tfsdk:"description"`
@@ -357,6 +358,8 @@ func (r *speedDialResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 		Description: "A speed dial: extensions dial *0 and the code to call the number. Import with \"<tenant id>/<id>\".",
 		Attributes: map[string]schema.Attribute{
 			"id": idAttr(), "tenant_id": replaceAttr(""),
+			"extension_id": schema.StringAttribute{Optional: true, PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				Description: "Make it this extension's own speed dial, which wins over the tenant's of the same code. Without it the speed dial is the tenant's."},
 			"code":        replaceAttr("1-4 digits."),
 			"number":      schema.StringAttribute{Required: true, Description: "2-20 characters from 0-9 * #: internal, or external through the outbound routes."},
 			"description": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
@@ -369,6 +372,10 @@ func (r *speedDialResource) Configure(_ context.Context, req resource.ConfigureR
 
 func (m *speedDialModel) set(s client.SpeedDial) {
 	m.ID, m.TenantID = idString(s.ID), idString(s.TenantID)
+	m.ExtensionID = types.StringNull()
+	if s.ExtensionID != nil {
+		m.ExtensionID = idString(*s.ExtensionID)
+	}
 	m.Code, m.Number, m.Description = types.StringValue(s.Code), types.StringValue(s.Number), types.StringValue(s.Description)
 }
 
@@ -379,7 +386,15 @@ func (r *speedDialResource) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	s, err := r.c.CreateSpeedDial(ctx, tenant, client.SpeedDialInput{Code: m.Code.ValueString(), Number: m.Number.ValueString(), Description: m.Description.ValueString()})
+	in := client.SpeedDialInput{Code: m.Code.ValueString(), Number: m.Number.ValueString(), Description: m.Description.ValueString()}
+	if !m.ExtensionID.IsNull() && !m.ExtensionID.IsUnknown() {
+		ext := parseID(&resp.Diagnostics, "extension_id", m.ExtensionID)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		in.ExtensionID = &ext
+	}
+	s, err := r.c.CreateSpeedDial(ctx, tenant, in)
 	if err != nil {
 		resp.Diagnostics.AddError("create speed dial", err.Error())
 		return

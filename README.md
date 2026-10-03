@@ -31,7 +31,7 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 | `apipbx_announcement` | `<tenant id>/<id>` | Plays an `apipbx_recording`, then continues to `next_type`/`next_id`. A destination (`announcement`). |
 | `apipbx_misc_destination` | `<tenant id>/<id>` | A `number` (internal, or external through the outbound routes) usable as a destination (`misc_destination`). |
 | `apipbx_caller_id_step` | `<tenant id>/<id>` | Changes the caller id (`name_prefix` and/or `number`), then continues to `next_type`/`next_id`. A destination (`set_caller_id`). |
-| `apipbx_speed_dial` | `<tenant id>/<id>` | `code` (1-4 digits) and `number`: extensions dial `*0` and the code. |
+| `apipbx_speed_dial` | `<tenant id>/<id>` | `code` (1-4 digits) and `number`: extensions dial `*0` and the code. With `extension_id` it is that extension's own and wins over the tenant's of the same code. |
 | `apipbx_paging_group` | `<tenant id>/<id>` | Dialling `number` pages the idle `members` (extension ids) not on DND; their phones are asked to answer by themselves. `duplex` lets them talk back. A destination (`paging_group`). |
 | `apipbx_follow_me` | `<tenant id>/<extension id>` | An extension's follow-me: `numbers` (1-5, internal or external) ring together with the phone after `prering_seconds`; `confirm` makes an answerer press 1. |
 | `apipbx_moh_class` | `<tenant id>/<id>` | A music on hold class: `recordings` (ids) played in order, or shuffled with `random`. A queue plays it by naming it in `music_on_hold`; `name` cannot change. |
