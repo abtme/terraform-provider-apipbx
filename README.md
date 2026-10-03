@@ -38,6 +38,7 @@ tenant. A complete example is in [`examples/complete`](examples/complete/main.tf
 | `apipbx_call_recording_policy` | `<tenant id>/<extension id>` | Which of an extension's calls are recorded: `inbound`, `outbound` or `both`. Destroying it turns recording off. The recordings themselves are read through the API. |
 | `apipbx_parking_lot` | `<tenant id>` | A tenant's call parking: dial `park_number` to park a call, dial a slot (`first_slot`, `slots` of them) to pick it up. These numbers are reserved. |
 | `apipbx_voicemail_group` | `<tenant id>/<id>` | A message left for `number` (or sent there by a route) goes to every mailbox in `boxes`. A destination (`voicemail_group`). |
+| `apipbx_call_limit` | `<tenant id>` | The most calls a tenant may have in progress at once; one over it gets a busy signal. Destroying it removes the limit. |
 | `apipbx_ring_group` | `<tenant id>/<id>` | `members` are extension ids in ring order; `failover_type`/`failover_id` pick where an unanswered call goes (extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup). |
 | `apipbx_inbound_route` | `<tenant id>/<did>` | `destination_type`/`destination_id` (extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup). |
 | `apipbx_outbound_route` | `<tenant id>/<id>` | `patterns` (prefix, match, prepend) and `trunks` in failover order. |

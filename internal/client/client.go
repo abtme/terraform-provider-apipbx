@@ -1203,3 +1203,23 @@ func (c *Client) GetParkingLot(ctx context.Context, tenant int64) (ParkingLot, e
 func (c *Client) DeleteParkingLot(ctx context.Context, tenant int64) error {
 	return c.remove(ctx, fmt.Sprintf("/v1/tenants/%d/parking", tenant))
 }
+
+// ---- call limit
+
+type CallLimit struct {
+	MaxCalls int `json:"max_calls"`
+}
+
+func (c *Client) SetCallLimit(ctx context.Context, tenant int64, in CallLimit) (CallLimit, error) {
+	var l CallLimit
+	err := c.do(ctx, "PUT", fmt.Sprintf("/v1/tenants/%d/call-limit", tenant), in, &l)
+	return l, err
+}
+
+func (c *Client) GetCallLimit(ctx context.Context, tenant int64) (CallLimit, error) {
+	return get[CallLimit](ctx, c, fmt.Sprintf("/v1/tenants/%d/call-limit", tenant))
+}
+
+func (c *Client) DeleteCallLimit(ctx context.Context, tenant int64) error {
+	return c.remove(ctx, fmt.Sprintf("/v1/tenants/%d/call-limit", tenant))
+}
