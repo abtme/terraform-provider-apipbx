@@ -1342,3 +1342,40 @@ func (c *Client) UpdateWebhook(ctx context.Context, tenant, id int64, p WebhookP
 func (c *Client) DeleteWebhook(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "webhooks"), id))
 }
+
+// ---- phones
+
+type Phone struct {
+	ID          int64  `json:"id"`
+	TenantID    int64  `json:"tenant_id"`
+	MAC         string `json:"mac"`
+	ExtensionID int64  `json:"extension_id"`
+	Model       string `json:"model"`
+	Description string `json:"description"`
+}
+
+type PhoneInput struct {
+	MAC         string `json:"mac"`
+	ExtensionID int64  `json:"extension_id"`
+	Model       string `json:"model"`
+	Description string `json:"description"`
+}
+
+type PhonePatch struct {
+	ExtensionID *int64  `json:"extension_id,omitempty"`
+	Model       *string `json:"model,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+func (c *Client) CreatePhone(ctx context.Context, tenant int64, in PhoneInput) (Phone, error) {
+	return create[Phone](ctx, c, tp(tenant, "phones"), in)
+}
+func (c *Client) GetPhone(ctx context.Context, tenant, id int64) (Phone, error) {
+	return get[Phone](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "phones"), id))
+}
+func (c *Client) UpdatePhone(ctx context.Context, tenant, id int64, p PhonePatch) (Phone, error) {
+	return patch[Phone](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "phones"), id), p)
+}
+func (c *Client) DeletePhone(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "phones"), id))
+}
