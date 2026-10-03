@@ -1304,3 +1304,41 @@ func (c *Client) UpdateDISA(ctx context.Context, tenant, id int64, p DISAPatch) 
 func (c *Client) DeleteDISA(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "disas"), id))
 }
+
+// ---- webhooks
+
+type Webhook struct {
+	ID       int64    `json:"id"`
+	TenantID int64    `json:"tenant_id"`
+	URL      string   `json:"url"`
+	Secret   string   `json:"secret"`
+	Events   []string `json:"events"`
+	Enabled  bool     `json:"enabled"`
+}
+
+type WebhookInput struct {
+	URL     string   `json:"url"`
+	Secret  string   `json:"secret,omitempty"`
+	Events  []string `json:"events,omitempty"`
+	Enabled *bool    `json:"enabled,omitempty"`
+}
+
+type WebhookPatch struct {
+	URL     *string   `json:"url,omitempty"`
+	Secret  *string   `json:"secret,omitempty"`
+	Events  *[]string `json:"events,omitempty"`
+	Enabled *bool     `json:"enabled,omitempty"`
+}
+
+func (c *Client) CreateWebhook(ctx context.Context, tenant int64, in WebhookInput) (Webhook, error) {
+	return create[Webhook](ctx, c, tp(tenant, "webhooks"), in)
+}
+func (c *Client) GetWebhook(ctx context.Context, tenant, id int64) (Webhook, error) {
+	return get[Webhook](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "webhooks"), id))
+}
+func (c *Client) UpdateWebhook(ctx context.Context, tenant, id int64, p WebhookPatch) (Webhook, error) {
+	return patch[Webhook](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "webhooks"), id), p)
+}
+func (c *Client) DeleteWebhook(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "webhooks"), id))
+}
