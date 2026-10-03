@@ -1059,3 +1059,40 @@ func (c *Client) UpdatePagingGroup(ctx context.Context, tenant, id int64, p Pagi
 func (c *Client) DeletePagingGroup(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "paging-groups"), id))
 }
+
+// ---- follow-me
+
+type FollowMe struct {
+	ExtensionID    int64    `json:"extension_id"`
+	Enabled        bool     `json:"enabled"`
+	Numbers        []string `json:"numbers"`
+	PreringSeconds int      `json:"prering_seconds"`
+	RingSeconds    int      `json:"ring_seconds"`
+	Confirm        bool     `json:"confirm"`
+}
+
+type FollowMeInput struct {
+	Enabled        bool     `json:"enabled"`
+	Numbers        []string `json:"numbers"`
+	PreringSeconds int      `json:"prering_seconds"`
+	RingSeconds    int      `json:"ring_seconds"`
+	Confirm        bool     `json:"confirm"`
+}
+
+func followMePath(tenant, ext int64) string {
+	return fmt.Sprintf("%s/%d/follow-me", tp(tenant, "extensions"), ext)
+}
+
+func (c *Client) SetFollowMe(ctx context.Context, tenant, ext int64, in FollowMeInput) (FollowMe, error) {
+	var f FollowMe
+	err := c.do(ctx, "PUT", followMePath(tenant, ext), in, &f)
+	return f, err
+}
+
+func (c *Client) GetFollowMe(ctx context.Context, tenant, ext int64) (FollowMe, error) {
+	return get[FollowMe](ctx, c, followMePath(tenant, ext))
+}
+
+func (c *Client) DeleteFollowMe(ctx context.Context, tenant, ext int64) error {
+	return c.remove(ctx, followMePath(tenant, ext))
+}
