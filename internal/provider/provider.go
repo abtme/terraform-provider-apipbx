@@ -33,7 +33,10 @@ func (p *apipbxProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 }
 
 func (p *apipbxProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var cfg struct{ Endpoint, Token types.String }
+	var cfg struct {
+		Endpoint types.String `tfsdk:"endpoint"`
+		Token    types.String `tfsdk:"token"`
+	}
 	resp.Diagnostics.Append(req.Config.Get(ctx, &cfg)...)
 	endpoint, token := cfg.Endpoint.ValueString(), cfg.Token.ValueString()
 	if endpoint == "" {
@@ -51,7 +54,10 @@ func (p *apipbxProvider) Configure(ctx context.Context, req provider.ConfigureRe
 }
 
 func (p *apipbxProvider) Resources(context.Context) []func() resource.Resource {
-	return []func() resource.Resource{NewTenantResource}
+	return []func() resource.Resource{
+		NewTenantResource, NewAPIKeyResource, NewExtensionResource, NewTrunkResource,
+		NewRingGroupResource, NewInboundRouteResource, NewOutboundRouteResource,
+	}
 }
 
 func (p *apipbxProvider) DataSources(context.Context) []func() datasource.DataSource { return nil }
