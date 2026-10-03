@@ -18,16 +18,17 @@ import (
 type extensionResource struct{ c *client.Client }
 
 type extensionModel struct {
-	ID          types.String `tfsdk:"id"`
-	TenantID    types.String `tfsdk:"tenant_id"`
-	Number      types.String `tfsdk:"number"`
-	Name        types.String `tfsdk:"name"`
-	Tech        types.String `tfsdk:"tech"`
-	Secret      types.String `tfsdk:"secret"`
-	Username    types.String `tfsdk:"username"`
-	OutboundCID types.String `tfsdk:"outbound_cid"`
-	RingTime    types.Int64  `tfsdk:"ring_time"`
-	Enabled     types.Bool   `tfsdk:"enabled"`
+	ID             types.String `tfsdk:"id"`
+	TenantID       types.String `tfsdk:"tenant_id"`
+	Number         types.String `tfsdk:"number"`
+	Name           types.String `tfsdk:"name"`
+	Tech           types.String `tfsdk:"tech"`
+	Secret         types.String `tfsdk:"secret"`
+	Username       types.String `tfsdk:"username"`
+	OutboundCID    types.String `tfsdk:"outbound_cid"`
+	RingTime       types.Int64  `tfsdk:"ring_time"`
+	Enabled        types.Bool   `tfsdk:"enabled"`
+	VoicemailBoxID types.String `tfsdk:"voicemail_box_id"`
 }
 
 func NewExtensionResource() resource.Resource { return &extensionResource{} }
@@ -54,6 +55,8 @@ func (r *extensionResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"outbound_cid": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
 			"ring_time":    schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(20)},
 			"enabled":      schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true)},
+			"voicemail_box_id": schema.StringAttribute{Optional: true,
+				Description: "Mailbox for busy, unanswered and unreachable calls; the phone's *97 opens it."},
 		}}
 }
 
@@ -67,18 +70,27 @@ func (m *extensionModel) set(e client.Extension) {
 	m.Secret, m.Username = types.StringValue(e.Secret), types.StringValue(e.Username)
 	m.OutboundCID = types.StringValue(e.OutboundCID)
 	m.RingTime, m.Enabled = types.Int64Value(int64(e.RingTime)), types.BoolValue(e.Enabled)
+	m.VoicemailBoxID = types.StringNull()
+	if e.VoicemailBoxID != nil {
+		m.VoicemailBoxID = idString(*e.VoicemailBoxID)
+	}
 }
 
 func (r *extensionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var m extensionModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &m)...)
 	tenant := parseID(&resp.Diagnostics, "tenant_id", m.TenantID)
+	var box *int64
+	if !m.VoicemailBoxID.IsNull() {
+		box = ptr(parseID(&resp.Diagnostics, "voicemail_box_id", m.VoicemailBoxID))
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	e, err := r.c.CreateExtension(ctx, tenant, client.ExtensionInput{
 		Number: m.Number.ValueString(), Name: m.Name.ValueString(), Tech: m.Tech.ValueString(),
 		Secret: m.Secret.ValueString(), OutboundCID: m.OutboundCID.ValueString(), RingTime: int(m.RingTime.ValueInt64()),
+		VoicemailBoxID: box,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create extension", err.Error())
@@ -115,12 +127,16 @@ func (r *extensionResource) Update(ctx context.Context, req resource.UpdateReque
 	var m extensionModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &m)...)
 	tenant, id := parseID(&resp.Diagnostics, "tenant_id", m.TenantID), parseID(&resp.Diagnostics, "id", m.ID)
+	box := ptr(int64(0)) // 0 removes the link
+	if !m.VoicemailBoxID.IsNull() {
+		box = ptr(parseID(&resp.Diagnostics, "voicemail_box_id", m.VoicemailBoxID))
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	e, err := r.c.UpdateExtension(ctx, tenant, id, client.ExtensionPatch{
 		Name: ptr(m.Name.ValueString()), Secret: ptr(m.Secret.ValueString()), OutboundCID: ptr(m.OutboundCID.ValueString()),
-		RingTime: ptr(int(m.RingTime.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()),
+		RingTime: ptr(int(m.RingTime.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()), VoicemailBoxID: box,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update extension", err.Error())

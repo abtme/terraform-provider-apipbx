@@ -11,10 +11,19 @@ resource "apipbx_tenant" "t" {
   name = "TF Test"
 }
 
-resource "apipbx_extension" "a" {
+resource "apipbx_voicemail_box" "reception" {
   tenant_id = apipbx_tenant.t.id
   number    = "1001"
   name      = "Reception"
+  email     = "reception@example.com"
+  attach    = true
+}
+
+resource "apipbx_extension" "a" {
+  tenant_id        = apipbx_tenant.t.id
+  number           = "1001"
+  name             = "Reception"
+  voicemail_box_id = apipbx_voicemail_box.reception.id
   lifecycle { create_before_destroy = true }
 }
 
@@ -33,7 +42,8 @@ resource "apipbx_ring_group" "g" {
   name          = "Office"
   strategy      = "hunt"
   members       = [apipbx_extension.a.id, apipbx_extension.b.id]
-  failover_type = "hangup"
+  failover_type = "voicemail"
+  failover_id   = apipbx_voicemail_box.reception.id
 }
 
 resource "apipbx_trunk" "sip" {

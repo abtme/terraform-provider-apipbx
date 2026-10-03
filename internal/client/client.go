@@ -149,15 +149,18 @@ type Extension struct {
 	OutboundCID string `json:"outbound_cid"`
 	RingTime    int    `json:"ring_time"`
 	Enabled     bool   `json:"enabled"`
+	// VoicemailBoxID is the extension's mailbox (nil: none).
+	VoicemailBoxID *int64 `json:"voicemail_box_id"`
 }
 
 type ExtensionInput struct {
-	Number      string `json:"number"`
-	Name        string `json:"name"`
-	Tech        string `json:"tech,omitempty"`
-	Secret      string `json:"secret,omitempty"` // generated when empty
-	OutboundCID string `json:"outbound_cid"`
-	RingTime    int    `json:"ring_time,omitempty"`
+	Number         string `json:"number"`
+	Name           string `json:"name"`
+	Tech           string `json:"tech,omitempty"`
+	Secret         string `json:"secret,omitempty"` // generated when empty
+	OutboundCID    string `json:"outbound_cid"`
+	RingTime       int    `json:"ring_time,omitempty"`
+	VoicemailBoxID *int64 `json:"voicemail_box_id,omitempty"`
 }
 
 type ExtensionPatch struct {
@@ -166,6 +169,8 @@ type ExtensionPatch struct {
 	OutboundCID *string `json:"outbound_cid,omitempty"`
 	RingTime    *int    `json:"ring_time,omitempty"`
 	Enabled     *bool   `json:"enabled,omitempty"`
+	// VoicemailBoxID links a mailbox; 0 removes the link.
+	VoicemailBoxID *int64 `json:"voicemail_box_id,omitempty"`
 }
 
 func (c *Client) CreateExtension(ctx context.Context, tenant int64, in ExtensionInput) (Extension, error) {
@@ -385,4 +390,59 @@ func (c *Client) UpdateOutboundRoute(ctx context.Context, tenant, id int64, p Ou
 
 func (c *Client) DeleteOutboundRoute(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "outbound-routes"), id))
+}
+
+// ---- voicemail boxes
+
+type VoicemailBox struct {
+	ID               int64  `json:"id"`
+	TenantID         int64  `json:"tenant_id"`
+	Number           string `json:"number"`
+	Name             string `json:"name"`
+	PIN              string `json:"pin"`
+	Email            string `json:"email"`
+	Attach           bool   `json:"attach"`
+	DeleteAfterEmail bool   `json:"delete_after_email"`
+	SayCID           bool   `json:"say_cid"`
+	Envelope         bool   `json:"envelope"`
+	MaxMessages      int    `json:"max_messages"`
+}
+
+type VoicemailBoxInput struct {
+	Number           string `json:"number"`
+	Name             string `json:"name"`
+	PIN              string `json:"pin,omitempty"` // generated when empty
+	Email            string `json:"email"`
+	Attach           bool   `json:"attach"`
+	DeleteAfterEmail bool   `json:"delete_after_email"`
+	SayCID           bool   `json:"say_cid"`
+	Envelope         bool   `json:"envelope"`
+	MaxMessages      int    `json:"max_messages,omitempty"`
+}
+
+type VoicemailBoxPatch struct {
+	Name             *string `json:"name,omitempty"`
+	PIN              *string `json:"pin,omitempty"`
+	Email            *string `json:"email,omitempty"`
+	Attach           *bool   `json:"attach,omitempty"`
+	DeleteAfterEmail *bool   `json:"delete_after_email,omitempty"`
+	SayCID           *bool   `json:"say_cid,omitempty"`
+	Envelope         *bool   `json:"envelope,omitempty"`
+	MaxMessages      *int    `json:"max_messages,omitempty"`
+}
+
+func (c *Client) CreateVoicemailBox(ctx context.Context, tenant int64, in VoicemailBoxInput) (VoicemailBox, error) {
+	return create[VoicemailBox](ctx, c, tp(tenant, "voicemail-boxes"), in)
+}
+
+func (c *Client) GetVoicemailBox(ctx context.Context, tenant, id int64) (VoicemailBox, error) {
+	return get[VoicemailBox](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-boxes"), id))
+}
+
+func (c *Client) UpdateVoicemailBox(ctx context.Context, tenant, id int64, p VoicemailBoxPatch) (VoicemailBox, error) {
+	return patch[VoicemailBox](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-boxes"), id), p)
+}
+
+func (c *Client) DeleteVoicemailBox(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "voicemail-boxes"), id))
 }

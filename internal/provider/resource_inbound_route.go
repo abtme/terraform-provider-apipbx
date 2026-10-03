@@ -43,8 +43,8 @@ func (r *inboundRouteResource) Schema(_ context.Context, _ resource.SchemaReques
 			"did":              schema.StringAttribute{Required: true, Description: "Globally unique, 3-20 digits, optional leading +.", PlanModifiers: replace},
 			"description":      schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
 			"cid_prefix":       schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
-			"destination_type": schema.StringAttribute{Required: true, Description: "extension, ring_group or hangup."},
-			"destination_id":   schema.StringAttribute{Optional: true, Description: "Id of the extension or ring group."},
+			"destination_type": schema.StringAttribute{Required: true, Description: "extension, ring_group, voicemail or hangup."},
+			"destination_id":   schema.StringAttribute{Optional: true, Description: "Id of the extension, ring group or voicemail box."},
 		}}
 }
 

@@ -56,7 +56,7 @@ func (p *apipbxProvider) Configure(ctx context.Context, req provider.ConfigureRe
 func (p *apipbxProvider) Resources(context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewTenantResource, NewAPIKeyResource, NewExtensionResource, NewTrunkResource,
-		NewRingGroupResource, NewInboundRouteResource, NewOutboundRouteResource,
+		NewRingGroupResource, NewInboundRouteResource, NewOutboundRouteResource, NewVoicemailBoxResource,
 	}
 }
 
