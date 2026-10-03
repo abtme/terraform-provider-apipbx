@@ -150,7 +150,7 @@ func (r *blacklistSettingsResource) Schema(_ context.Context, _ resource.SchemaR
 			"block_unknown": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false),
 				Description: "Also divert calls whose caller id is withheld."},
 			"destination_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
-				Description: "Where diverted calls go: extension, ring_group, voicemail, time_condition, ivr or hangup."},
+				Description: "Where diverted calls go: extension, ring_group, voicemail, time_condition, ivr, queue or hangup."},
 			"destination_id": schema.StringAttribute{Optional: true},
 		}}
 }

@@ -758,3 +758,85 @@ func (c *Client) GetBlacklistSettings(ctx context.Context, tenant int64) (Blackl
 func (c *Client) UpdateBlacklistSettings(ctx context.Context, tenant int64, s BlacklistSettings) (BlacklistSettings, error) {
 	return patch[BlacklistSettings](ctx, c, tp(tenant, "blacklist-settings"), s)
 }
+
+// ---- queues
+
+type QueueMember struct {
+	ExtensionID int64 `json:"extension_id"`
+	Penalty     int   `json:"penalty"`
+	Dynamic     bool  `json:"dynamic"`
+}
+
+type CallQueue struct {
+	ID                 int64         `json:"id"`
+	TenantID           int64         `json:"tenant_id"`
+	Number             string        `json:"number"`
+	Name               string        `json:"name"`
+	Strategy           string        `json:"strategy"`
+	AgentTimeout       int           `json:"agent_timeout"`
+	Retry              int           `json:"retry"`
+	WrapupTime         int           `json:"wrapup_time"`
+	MaxWait            int           `json:"max_wait"`
+	MaxCallers         int           `json:"max_callers"`
+	JoinEmpty          bool          `json:"join_empty"`
+	LeaveWhenEmpty     bool          `json:"leave_when_empty"`
+	AnnouncePosition   bool          `json:"announce_position"`
+	AnnounceHoldTime   bool          `json:"announce_hold_time"`
+	AnnounceFrequency  int           `json:"announce_frequency"`
+	MusicOnHold        string        `json:"music_on_hold"`
+	Members            []QueueMember `json:"members"`
+	TimeoutDestination Destination   `json:"timeout_destination"`
+}
+
+type CallQueueInput struct {
+	Number             string        `json:"number"`
+	Name               string        `json:"name"`
+	Strategy           string        `json:"strategy,omitempty"`
+	AgentTimeout       int           `json:"agent_timeout,omitempty"`
+	Retry              *int          `json:"retry,omitempty"`
+	WrapupTime         int           `json:"wrapup_time,omitempty"`
+	MaxWait            int           `json:"max_wait,omitempty"`
+	MaxCallers         int           `json:"max_callers,omitempty"`
+	JoinEmpty          bool          `json:"join_empty,omitempty"`
+	LeaveWhenEmpty     bool          `json:"leave_when_empty,omitempty"`
+	AnnouncePosition   bool          `json:"announce_position,omitempty"`
+	AnnounceHoldTime   bool          `json:"announce_hold_time,omitempty"`
+	AnnounceFrequency  int           `json:"announce_frequency,omitempty"`
+	MusicOnHold        string        `json:"music_on_hold,omitempty"`
+	Members            []QueueMember `json:"members"`
+	TimeoutDestination *Destination  `json:"timeout_destination,omitempty"`
+}
+
+type CallQueuePatch struct {
+	Name               *string        `json:"name,omitempty"`
+	Strategy           *string        `json:"strategy,omitempty"`
+	AgentTimeout       *int           `json:"agent_timeout,omitempty"`
+	Retry              *int           `json:"retry,omitempty"`
+	WrapupTime         *int           `json:"wrapup_time,omitempty"`
+	MaxWait            *int           `json:"max_wait,omitempty"`
+	MaxCallers         *int           `json:"max_callers,omitempty"`
+	JoinEmpty          *bool          `json:"join_empty,omitempty"`
+	LeaveWhenEmpty     *bool          `json:"leave_when_empty,omitempty"`
+	AnnouncePosition   *bool          `json:"announce_position,omitempty"`
+	AnnounceHoldTime   *bool          `json:"announce_hold_time,omitempty"`
+	AnnounceFrequency  *int           `json:"announce_frequency,omitempty"`
+	MusicOnHold        *string        `json:"music_on_hold,omitempty"`
+	Members            *[]QueueMember `json:"members,omitempty"`
+	TimeoutDestination *Destination   `json:"timeout_destination,omitempty"`
+}
+
+func (c *Client) CreateCallQueue(ctx context.Context, tenant int64, in CallQueueInput) (CallQueue, error) {
+	return create[CallQueue](ctx, c, tp(tenant, "queues"), in)
+}
+
+func (c *Client) GetCallQueue(ctx context.Context, tenant, id int64) (CallQueue, error) {
+	return get[CallQueue](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "queues"), id))
+}
+
+func (c *Client) UpdateCallQueue(ctx context.Context, tenant, id int64, p CallQueuePatch) (CallQueue, error) {
+	return patch[CallQueue](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "queues"), id), p)
+}
+
+func (c *Client) DeleteCallQueue(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "queues"), id))
+}

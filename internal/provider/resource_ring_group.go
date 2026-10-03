@@ -47,7 +47,7 @@ func (r *ringGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"ring_time": schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(20)},
 			"members":   schema.ListAttribute{Required: true, ElementType: types.StringType, Description: "Extension ids, in ring order."},
 			"failover_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
-				Description: "Where an unanswered call goes: extension, ring_group, voicemail, time_condition, ivr or hangup."},
+				Description: "Where an unanswered call goes: extension, ring_group, voicemail, time_condition, ivr, queue or hangup."},
 			"failover_id": schema.StringAttribute{Optional: true, Description: "Id of the failover extension, ring group or voicemail box."},
 		}}
 }
