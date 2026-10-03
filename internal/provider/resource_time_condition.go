@@ -25,6 +25,7 @@ type timeConditionModel struct {
 	NoMatchType types.String `tfsdk:"no_match_type"`
 	NoMatchID   types.String `tfsdk:"no_match_id"`
 	Override    types.String `tfsdk:"override"`
+	ToggleCode  types.String `tfsdk:"toggle_code"`
 	MatchesNow  types.Bool   `tfsdk:"matches_now"`
 }
 
@@ -35,7 +36,7 @@ func (r *timeConditionResource) Metadata(_ context.Context, req resource.Metadat
 }
 
 func (r *timeConditionResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	dest := "extension, ring_group, voicemail, time_condition, ivr, queue, conference or hangup."
+	dest := "extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id or hangup."
 	resp.Schema = schema.Schema{
 		Description: "Sends calls to one destination while a time group matches and to another otherwise. Import with \"<tenant id>/<id>\".",
 		Attributes: map[string]schema.Attribute{
@@ -49,6 +50,8 @@ func (r *timeConditionResource) Schema(_ context.Context, _ resource.SchemaReque
 			"no_match_id":   schema.StringAttribute{Optional: true},
 			"override": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("none"),
 				Description: "none, match or no_match: force one branch whatever the time."},
+			"toggle_code": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""),
+				Description: "1-3 digits: dialling *28 and the code from an extension flips override between none and no_match (a day/night switch, which shows as drift)."},
 			"matches_now": schema.BoolAttribute{Computed: true, Description: "Whether the time group matches at the moment of the last refresh (informational)."},
 		}}
 }
@@ -60,6 +63,7 @@ func (r *timeConditionResource) Configure(_ context.Context, req resource.Config
 func (m *timeConditionModel) set(c client.TimeCondition) {
 	m.ID, m.TenantID, m.TimeGroupID = idString(c.ID), idString(c.TenantID), idString(c.TimeGroupID)
 	m.Name, m.Override, m.MatchesNow = types.StringValue(c.Name), types.StringValue(c.Override), types.BoolValue(c.MatchesNow)
+	m.ToggleCode = types.StringValue(c.ToggleCode)
 	m.MatchType, m.MatchID = destination(c.Match)
 	m.NoMatchType, m.NoMatchID = destination(c.NoMatch)
 }
@@ -74,7 +78,7 @@ func (r *timeConditionResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 	c, err := r.c.CreateTimeCondition(ctx, tenant, client.TimeConditionInput{Name: m.Name.ValueString(), TimeGroupID: group,
-		Match: *match, NoMatch: *noMatch, Override: m.Override.ValueString()})
+		Match: *match, NoMatch: *noMatch, Override: m.Override.ValueString(), ToggleCode: m.ToggleCode.ValueString()})
 	if err != nil {
 		resp.Diagnostics.AddError("create time condition", err.Error())
 		return
@@ -110,7 +114,7 @@ func (r *timeConditionResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 	c, err := r.c.UpdateTimeCondition(ctx, tenant, id, client.TimeConditionPatch{Name: ptr(m.Name.ValueString()), TimeGroupID: &group,
-		Match: match, NoMatch: noMatch, Override: ptr(m.Override.ValueString())})
+		Match: match, NoMatch: noMatch, Override: ptr(m.Override.ValueString()), ToggleCode: ptr(m.ToggleCode.ValueString())})
 	if err != nil {
 		resp.Diagnostics.AddError("update time condition", err.Error())
 		return

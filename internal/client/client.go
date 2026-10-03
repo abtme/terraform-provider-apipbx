@@ -549,6 +549,7 @@ type TimeCondition struct {
 	Match       Destination `json:"match"`
 	NoMatch     Destination `json:"no_match"`
 	Override    string      `json:"override"`
+	ToggleCode  string      `json:"toggle_code"`
 	MatchesNow  bool        `json:"matches_now"`
 }
 
@@ -558,6 +559,7 @@ type TimeConditionInput struct {
 	Match       Destination `json:"match"`
 	NoMatch     Destination `json:"no_match"`
 	Override    string      `json:"override,omitempty"`
+	ToggleCode  string      `json:"toggle_code,omitempty"`
 }
 
 type TimeConditionPatch struct {
@@ -566,6 +568,7 @@ type TimeConditionPatch struct {
 	Match       *Destination `json:"match,omitempty"`
 	NoMatch     *Destination `json:"no_match,omitempty"`
 	Override    *string      `json:"override,omitempty"`
+	ToggleCode  *string      `json:"toggle_code,omitempty"`
 }
 
 func (c *Client) CreateTimeCondition(ctx context.Context, tenant int64, in TimeConditionInput) (TimeCondition, error) {
@@ -885,4 +888,137 @@ func (c *Client) UpdateConference(ctx context.Context, tenant, id int64, p Confe
 
 func (c *Client) DeleteConference(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "conferences"), id))
+}
+
+// ---- announcements, misc destinations, caller id steps, speed dials
+
+type Announcement struct {
+	ID          int64       `json:"id"`
+	TenantID    int64       `json:"tenant_id"`
+	Name        string      `json:"name"`
+	RecordingID int64       `json:"recording_id"`
+	Next        Destination `json:"next"`
+}
+
+type AnnouncementInput struct {
+	Name        string       `json:"name"`
+	RecordingID int64        `json:"recording_id"`
+	Next        *Destination `json:"next,omitempty"`
+}
+
+type AnnouncementPatch struct {
+	Name        *string      `json:"name,omitempty"`
+	RecordingID *int64       `json:"recording_id,omitempty"`
+	Next        *Destination `json:"next,omitempty"`
+}
+
+func (c *Client) CreateAnnouncement(ctx context.Context, tenant int64, in AnnouncementInput) (Announcement, error) {
+	return create[Announcement](ctx, c, tp(tenant, "announcements"), in)
+}
+func (c *Client) GetAnnouncement(ctx context.Context, tenant, id int64) (Announcement, error) {
+	return get[Announcement](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "announcements"), id))
+}
+func (c *Client) UpdateAnnouncement(ctx context.Context, tenant, id int64, p AnnouncementPatch) (Announcement, error) {
+	return patch[Announcement](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "announcements"), id), p)
+}
+func (c *Client) DeleteAnnouncement(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "announcements"), id))
+}
+
+type MiscDestination struct {
+	ID       int64  `json:"id"`
+	TenantID int64  `json:"tenant_id"`
+	Name     string `json:"name"`
+	Number   string `json:"number"`
+}
+
+type MiscDestinationInput struct {
+	Name   string `json:"name"`
+	Number string `json:"number"`
+}
+
+type MiscDestinationPatch struct {
+	Name   *string `json:"name,omitempty"`
+	Number *string `json:"number,omitempty"`
+}
+
+func (c *Client) CreateMiscDestination(ctx context.Context, tenant int64, in MiscDestinationInput) (MiscDestination, error) {
+	return create[MiscDestination](ctx, c, tp(tenant, "misc-destinations"), in)
+}
+func (c *Client) GetMiscDestination(ctx context.Context, tenant, id int64) (MiscDestination, error) {
+	return get[MiscDestination](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "misc-destinations"), id))
+}
+func (c *Client) UpdateMiscDestination(ctx context.Context, tenant, id int64, p MiscDestinationPatch) (MiscDestination, error) {
+	return patch[MiscDestination](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "misc-destinations"), id), p)
+}
+func (c *Client) DeleteMiscDestination(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "misc-destinations"), id))
+}
+
+type CallerIDStep struct {
+	ID         int64       `json:"id"`
+	TenantID   int64       `json:"tenant_id"`
+	Name       string      `json:"name"`
+	NamePrefix string      `json:"name_prefix"`
+	Number     string      `json:"number"`
+	Next       Destination `json:"next"`
+}
+
+type CallerIDStepInput struct {
+	Name       string       `json:"name"`
+	NamePrefix string       `json:"name_prefix"`
+	Number     string       `json:"number"`
+	Next       *Destination `json:"next,omitempty"`
+}
+
+type CallerIDStepPatch struct {
+	Name       *string      `json:"name,omitempty"`
+	NamePrefix *string      `json:"name_prefix,omitempty"`
+	Number     *string      `json:"number,omitempty"`
+	Next       *Destination `json:"next,omitempty"`
+}
+
+func (c *Client) CreateCallerIDStep(ctx context.Context, tenant int64, in CallerIDStepInput) (CallerIDStep, error) {
+	return create[CallerIDStep](ctx, c, tp(tenant, "caller-id-steps"), in)
+}
+func (c *Client) GetCallerIDStep(ctx context.Context, tenant, id int64) (CallerIDStep, error) {
+	return get[CallerIDStep](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "caller-id-steps"), id))
+}
+func (c *Client) UpdateCallerIDStep(ctx context.Context, tenant, id int64, p CallerIDStepPatch) (CallerIDStep, error) {
+	return patch[CallerIDStep](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "caller-id-steps"), id), p)
+}
+func (c *Client) DeleteCallerIDStep(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "caller-id-steps"), id))
+}
+
+type SpeedDial struct {
+	ID          int64  `json:"id"`
+	TenantID    int64  `json:"tenant_id"`
+	Code        string `json:"code"`
+	Number      string `json:"number"`
+	Description string `json:"description"`
+}
+
+type SpeedDialInput struct {
+	Code        string `json:"code"`
+	Number      string `json:"number"`
+	Description string `json:"description"`
+}
+
+type SpeedDialPatch struct {
+	Number      *string `json:"number,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+func (c *Client) CreateSpeedDial(ctx context.Context, tenant int64, in SpeedDialInput) (SpeedDial, error) {
+	return create[SpeedDial](ctx, c, tp(tenant, "speed-dials"), in)
+}
+func (c *Client) GetSpeedDial(ctx context.Context, tenant, id int64) (SpeedDial, error) {
+	return get[SpeedDial](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "speed-dials"), id))
+}
+func (c *Client) UpdateSpeedDial(ctx context.Context, tenant, id int64, p SpeedDialPatch) (SpeedDial, error) {
+	return patch[SpeedDial](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "speed-dials"), id), p)
+}
+func (c *Client) DeleteSpeedDial(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "speed-dials"), id))
 }
