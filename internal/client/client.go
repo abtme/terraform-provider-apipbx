@@ -407,6 +407,7 @@ type OutboundRoute struct {
 	Enabled  bool      `json:"enabled"`
 	Patterns []Pattern `json:"patterns"`
 	Trunks   []int64   `json:"trunks"`
+	PinSetID *int64    `json:"pin_set_id"`
 }
 
 type OutboundRouteInput struct {
@@ -414,6 +415,7 @@ type OutboundRouteInput struct {
 	Position int       `json:"position"`
 	Patterns []Pattern `json:"patterns"`
 	Trunks   []int64   `json:"trunks"`
+	PinSetID *int64    `json:"pin_set_id,omitempty"`
 }
 
 type OutboundRoutePatch struct {
@@ -422,6 +424,7 @@ type OutboundRoutePatch struct {
 	Enabled  *bool      `json:"enabled,omitempty"`
 	Patterns *[]Pattern `json:"patterns,omitempty"`
 	Trunks   *[]int64   `json:"trunks,omitempty"`
+	PinSetID *int64     `json:"pin_set_id,omitempty"` // 0 removes the PIN requirement
 }
 
 func (c *Client) CreateOutboundRoute(ctx context.Context, tenant int64, in OutboundRouteInput) (OutboundRoute, error) {
@@ -1224,4 +1227,36 @@ func (c *Client) GetCallLimit(ctx context.Context, tenant int64) (CallLimit, err
 
 func (c *Client) DeleteCallLimit(ctx context.Context, tenant int64) error {
 	return c.remove(ctx, fmt.Sprintf("/v1/tenants/%d/call-limit", tenant))
+}
+
+// ---- PIN sets
+
+type PinSet struct {
+	ID       int64    `json:"id"`
+	TenantID int64    `json:"tenant_id"`
+	Name     string   `json:"name"`
+	Pins     []string `json:"pins"`
+}
+
+type PinSetInput struct {
+	Name string   `json:"name"`
+	Pins []string `json:"pins"`
+}
+
+type PinSetPatch struct {
+	Name *string   `json:"name,omitempty"`
+	Pins *[]string `json:"pins,omitempty"`
+}
+
+func (c *Client) CreatePinSet(ctx context.Context, tenant int64, in PinSetInput) (PinSet, error) {
+	return create[PinSet](ctx, c, tp(tenant, "pin-sets"), in)
+}
+func (c *Client) GetPinSet(ctx context.Context, tenant, id int64) (PinSet, error) {
+	return get[PinSet](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "pin-sets"), id))
+}
+func (c *Client) UpdatePinSet(ctx context.Context, tenant, id int64, p PinSetPatch) (PinSet, error) {
+	return patch[PinSet](ctx, c, fmt.Sprintf("%s/%d", tp(tenant, "pin-sets"), id), p)
+}
+func (c *Client) DeletePinSet(ctx context.Context, tenant, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "pin-sets"), id))
 }

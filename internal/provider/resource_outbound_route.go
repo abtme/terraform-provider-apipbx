@@ -30,6 +30,7 @@ type outboundRouteModel struct {
 	Enabled  types.Bool     `tfsdk:"enabled"`
 	Patterns []patternModel `tfsdk:"patterns"`
 	Trunks   types.List     `tfsdk:"trunks"`
+	PinSetID types.String   `tfsdk:"pin_set_id"`
 }
 
 func NewOutboundRouteResource() resource.Resource { return &outboundRouteResource{} }
@@ -52,7 +53,8 @@ func (r *outboundRouteResource) Schema(_ context.Context, _ resource.SchemaReque
 				"match":   schema.StringAttribute{Required: true, Description: "Asterisk pattern: X 0-9, Z 1-9, N 2-9, [1-3], . one or more, ! zero or more."},
 				"prepend": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Digits added before dialling."},
 			}}},
-			"trunks": schema.ListAttribute{Required: true, ElementType: types.StringType, Description: "Trunk ids in failover order."},
+			"trunks":     schema.ListAttribute{Required: true, ElementType: types.StringType, Description: "Trunk ids in failover order."},
+			"pin_set_id": schema.StringAttribute{Optional: true, Description: "A PIN set (apipbx_pin_set): the caller must key in one of its PINs before the call is placed."},
 		}}
 }
 
@@ -68,6 +70,10 @@ func (m *outboundRouteModel) set(rt client.OutboundRoute) {
 		m.Patterns = append(m.Patterns, patternModel{types.StringValue(p.Prefix), types.StringValue(p.Match), types.StringValue(p.Prepend)})
 	}
 	m.Trunks = idListValue(rt.Trunks)
+	m.PinSetID = types.StringNull()
+	if rt.PinSetID != nil {
+		m.PinSetID = idString(*rt.PinSetID)
+	}
 }
 
 func (m outboundRouteModel) patterns() []client.Pattern {
@@ -86,9 +92,15 @@ func (r *outboundRouteResource) Create(ctx context.Context, req resource.CreateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	rt, err := r.c.CreateOutboundRoute(ctx, tenant, client.OutboundRouteInput{
-		Name: m.Name.ValueString(), Position: int(m.Position.ValueInt64()), Patterns: m.patterns(), Trunks: trunks,
-	})
+	in := client.OutboundRouteInput{Name: m.Name.ValueString(), Position: int(m.Position.ValueInt64()), Patterns: m.patterns(), Trunks: trunks}
+	if !m.PinSetID.IsNull() && !m.PinSetID.IsUnknown() {
+		pin := parseID(&resp.Diagnostics, "pin_set_id", m.PinSetID)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		in.PinSetID = &pin
+	}
+	rt, err := r.c.CreateOutboundRoute(ctx, tenant, in)
 	if err != nil {
 		resp.Diagnostics.AddError("create outbound route", err.Error())
 		return
@@ -129,9 +141,16 @@ func (r *outboundRouteResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 	pats := m.patterns()
+	pin := int64(0) // none: removes the requirement
+	if !m.PinSetID.IsNull() && !m.PinSetID.IsUnknown() {
+		pin = parseID(&resp.Diagnostics, "pin_set_id", m.PinSetID)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 	rt, err := r.c.UpdateOutboundRoute(ctx, tenant, id, client.OutboundRoutePatch{
 		Name: ptr(m.Name.ValueString()), Position: ptr(int(m.Position.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()),
-		Patterns: &pats, Trunks: &trunks,
+		Patterns: &pats, Trunks: &trunks, PinSetID: &pin,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update outbound route", err.Error())
