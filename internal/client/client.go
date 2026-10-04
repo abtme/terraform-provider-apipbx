@@ -1510,3 +1510,44 @@ func (c *Client) UpdateFirewallCarrier(ctx context.Context, id int64, p Firewall
 func (c *Client) DeleteFirewallCarrier(ctx context.Context, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("/v1/firewall/carriers/%d", id))
 }
+
+// FirewallSite is a connection on a dynamic address, kept as a DNS name that follows it.
+type FirewallSite struct {
+	ID        int64    `json:"id"`
+	Name      string   `json:"name"`
+	Host      string   `json:"host"`
+	Enabled   bool     `json:"enabled"`
+	Services  []string `json:"services"`
+	Addresses []string `json:"addresses"`
+	Changed   string   `json:"changed"`
+}
+
+type FirewallSiteInput struct {
+	Name     string   `json:"name"`
+	Host     string   `json:"host"`
+	Enabled  *bool    `json:"enabled,omitempty"`
+	Services []string `json:"services,omitempty"`
+}
+
+type FirewallSitePatch struct {
+	Name     *string   `json:"name,omitempty"`
+	Host     *string   `json:"host,omitempty"`
+	Enabled  *bool     `json:"enabled,omitempty"`
+	Services *[]string `json:"services,omitempty"`
+}
+
+func (c *Client) CreateFirewallSite(ctx context.Context, in FirewallSiteInput) (FirewallSite, error) {
+	return create[FirewallSite](ctx, c, "/v1/firewall/sites", in)
+}
+
+func (c *Client) GetFirewallSite(ctx context.Context, id int64) (FirewallSite, error) {
+	return get[FirewallSite](ctx, c, fmt.Sprintf("/v1/firewall/sites/%d", id))
+}
+
+func (c *Client) UpdateFirewallSite(ctx context.Context, id int64, p FirewallSitePatch) (FirewallSite, error) {
+	return patch[FirewallSite](ctx, c, fmt.Sprintf("/v1/firewall/sites/%d", id), p)
+}
+
+func (c *Client) DeleteFirewallSite(ctx context.Context, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("/v1/firewall/sites/%d", id))
+}

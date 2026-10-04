@@ -515,3 +515,129 @@ func (r *firewallCarrierResource) Delete(ctx context.Context, req resource.Delet
 func (r *firewallCarrierResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }
+
+// ---- apipbx_firewall_site
+
+type firewallSiteResource struct{ c *client.Client }
+
+type firewallSiteModel struct {
+	ID        types.String `tfsdk:"id"`
+	Name      types.String `tfsdk:"name"`
+	Host      types.String `tfsdk:"host"`
+	Enabled   types.Bool   `tfsdk:"enabled"`
+	Services  types.Set    `tfsdk:"services"`
+	Addresses types.Set    `tfsdk:"addresses"`
+}
+
+func NewFirewallSiteResource() resource.Resource { return &firewallSiteResource{} }
+
+func (r *firewallSiteResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_firewall_site"
+}
+
+func (r *firewallSiteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Description: "A connection on a dynamic address (an office or home whose ISP renumbers it), kept as a DNS name that follows it. Its current addresses are let " +
+			"through every restricted service of the firewall (or only the listed ones), and the ruleset is rewritten when the name's address changes " +
+			"(checked every minute; a lookup that fails keeps the last address). Import with the site id.",
+		Attributes: map[string]schema.Attribute{
+			"id":      idAttr(),
+			"name":    schema.StringAttribute{Required: true},
+			"host":    schema.StringAttribute{Required: true, Description: "The DNS name (dynamic DNS, or any name kept pointing at the connection)."},
+			"enabled": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true)},
+			"services": schema.SetAttribute{Optional: true, Computed: true, ElementType: types.StringType, Default: setdefault.StaticValue(emptySet),
+				Description: "ssh, api, https, sip, sips, wss, iax2 or rtp; empty is every restricted service."},
+			"addresses": schema.SetAttribute{Computed: true, ElementType: types.StringType, Description: "What the name resolves to now."},
+		}}
+}
+
+func (r *firewallSiteResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	clientFrom(req.ProviderData, &r.c)
+}
+
+func (m *firewallSiteModel) set(s client.FirewallSite) {
+	m.ID, m.Name, m.Host, m.Enabled = idString(s.ID), types.StringValue(s.Name), types.StringValue(s.Host), types.BoolValue(s.Enabled)
+	sv := make([]attr.Value, 0, len(s.Services))
+	for _, x := range s.Services {
+		sv = append(sv, types.StringValue(x))
+	}
+	m.Services = types.SetValueMust(types.StringType, sv)
+	av := make([]attr.Value, 0, len(s.Addresses))
+	for _, x := range s.Addresses {
+		av = append(av, types.StringValue(x))
+	}
+	m.Addresses = types.SetValueMust(types.StringType, av)
+}
+
+func (r *firewallSiteResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var m firewallSiteModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &m)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	s, err := r.c.CreateFirewallSite(ctx, client.FirewallSiteInput{Name: m.Name.ValueString(), Host: m.Host.ValueString(), Enabled: ptr(m.Enabled.ValueBool()), Services: stringsOf(m.Services)})
+	if err != nil {
+		resp.Diagnostics.AddError("create firewall site", err.Error())
+		return
+	}
+	// the addresses were resolved by the create; read them back
+	if got, err := r.c.GetFirewallSite(ctx, s.ID); err == nil {
+		s = got
+	}
+	m.set(s)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m)...)
+}
+
+func (r *firewallSiteResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var m firewallSiteModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &m)...)
+	id := parseID(&resp.Diagnostics, "id", m.ID)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	s, err := r.c.GetFirewallSite(ctx, id)
+	if err != nil {
+		readFailed(ctx, "firewall site", err, resp)
+		return
+	}
+	m.set(s)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m)...)
+}
+
+func (r *firewallSiteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var m firewallSiteModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &m)...)
+	id := parseID(&resp.Diagnostics, "id", m.ID)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	svc := stringsOf(m.Services)
+	if svc == nil {
+		svc = []string{}
+	}
+	if _, err := r.c.UpdateFirewallSite(ctx, id, client.FirewallSitePatch{Name: ptr(m.Name.ValueString()), Host: ptr(m.Host.ValueString()), Enabled: ptr(m.Enabled.ValueBool()), Services: &svc}); err != nil {
+		resp.Diagnostics.AddError("update firewall site", err.Error())
+		return
+	}
+	s, err := r.c.GetFirewallSite(ctx, id)
+	if err != nil {
+		resp.Diagnostics.AddError("read firewall site", err.Error())
+		return
+	}
+	m.set(s)
+	resp.Diagnostics.Append(resp.State.Set(ctx, m)...)
+}
+
+func (r *firewallSiteResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var m firewallSiteModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &m)...)
+	id := parseID(&resp.Diagnostics, "id", m.ID)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	deleteFailed("firewall site", r.c.DeleteFirewallSite(ctx, id), resp)
+}
+
+func (r *firewallSiteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+}
