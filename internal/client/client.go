@@ -620,6 +620,7 @@ type IVR struct {
 	Entries            []IVREntry  `json:"entries"`
 	TimeoutDestination Destination `json:"timeout_destination"`
 	InvalidDestination Destination `json:"invalid_destination"`
+	DirectDial         []string    `json:"direct_dial"`
 }
 
 type IVRInput struct {
@@ -631,6 +632,7 @@ type IVRInput struct {
 	Entries            []IVREntry   `json:"entries"`
 	TimeoutDestination *Destination `json:"timeout_destination,omitempty"`
 	InvalidDestination *Destination `json:"invalid_destination,omitempty"`
+	DirectDial         []string     `json:"direct_dial"`
 }
 
 type IVRPatch struct {
@@ -642,6 +644,7 @@ type IVRPatch struct {
 	Entries            *[]IVREntry  `json:"entries,omitempty"`
 	TimeoutDestination *Destination `json:"timeout_destination,omitempty"`
 	InvalidDestination *Destination `json:"invalid_destination,omitempty"`
+	DirectDial         *[]string    `json:"direct_dial,omitempty"`
 }
 
 func (c *Client) CreateIVR(ctx context.Context, tenant int64, in IVRInput) (IVR, error) {

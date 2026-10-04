@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,6 +39,7 @@ type ivrModel struct {
 	TimeoutID      types.String    `tfsdk:"timeout_id"`
 	InvalidType    types.String    `tfsdk:"invalid_type"`
 	InvalidID      types.String    `tfsdk:"invalid_id"`
+	DirectDial     types.Set       `tfsdk:"direct_dial"`
 }
 
 func NewIVRResource() resource.Resource { return &ivrResource{} }
@@ -63,7 +65,7 @@ func (r *ivrResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 				Default: listdefault.StaticValue(types.ListValueMust(types.ObjectType{AttrTypes: map[string]attr.Type{
 					"digit": types.StringType, "destination_type": types.StringType, "destination_id": types.StringType}}, []attr.Value{})),
 				NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-					"digit":            schema.StringAttribute{Required: true, Description: "One of 0-9 or *."},
+					"digit":            schema.StringAttribute{Required: true, Description: "One to six of the digits 0-9 and *."},
 					"destination_type": schema.StringAttribute{Required: true, Description: dest},
 					"destination_id":   schema.StringAttribute{Optional: true, Description: "Id of that destination (not for hangup)."},
 				}}},
@@ -71,6 +73,9 @@ func (r *ivrResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"timeout_id":   schema.StringAttribute{Optional: true},
 			"invalid_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"), Description: "Where unknown keys lead after the retries: " + dest},
 			"invalid_id":   schema.StringAttribute{Optional: true},
+			"direct_dial": schema.SetAttribute{Optional: true, Computed: true, ElementType: types.StringType,
+				Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
+				Description: "Numbers a caller may dial instead of keying an entry: extension and/or conference. A key of the menu wins over a number that starts the same; a number shorter than the longest choice waits for a 3 second pause."},
 		}}
 }
 
@@ -93,6 +98,23 @@ func (m *ivrModel) set(v client.IVR) {
 	}
 	m.TimeoutType, m.TimeoutID = destination(v.TimeoutDestination)
 	m.InvalidType, m.InvalidID = destination(v.InvalidDestination)
+	dd := make([]attr.Value, 0, len(v.DirectDial))
+	for _, d := range v.DirectDial {
+		dd = append(dd, types.StringValue(d))
+	}
+	m.DirectDial = types.SetValueMust(types.StringType, dd)
+}
+
+// directDial converts the configured set; unset means none.
+func (m ivrModel) directDial() []string {
+	out := []string{}
+	if m.DirectDial.IsNull() || m.DirectDial.IsUnknown() {
+		return out
+	}
+	for _, e := range m.DirectDial.Elements() {
+		out = append(out, e.(types.String).ValueString())
+	}
+	return out
 }
 
 // entries converts the configured keys; an unset list is an empty menu.
@@ -120,7 +142,7 @@ func (r *ivrResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 	v, err := r.c.CreateIVR(ctx, tenant, client.IVRInput{Name: m.Name.ValueString(), Announcement: m.Announcement.ValueString(), RecordingID: rec,
 		TimeoutSeconds: int(m.TimeoutSeconds.ValueInt64()), MaxRetries: int(m.MaxRetries.ValueInt64()),
-		Entries: entries, TimeoutDestination: to, InvalidDestination: inv})
+		Entries: entries, TimeoutDestination: to, InvalidDestination: inv, DirectDial: m.directDial()})
 	if err != nil {
 		resp.Diagnostics.AddError("create ivr", err.Error())
 		return
@@ -159,7 +181,8 @@ func (r *ivrResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	v, err := r.c.UpdateIVR(ctx, tenant, id, client.IVRPatch{Name: ptr(m.Name.ValueString()), Announcement: ptr(m.Announcement.ValueString()), RecordingID: rec,
+	dd := m.directDial()
+	v, err := r.c.UpdateIVR(ctx, tenant, id, client.IVRPatch{DirectDial: &dd, Name: ptr(m.Name.ValueString()), Announcement: ptr(m.Announcement.ValueString()), RecordingID: rec,
 		TimeoutSeconds: ptr(int(m.TimeoutSeconds.ValueInt64())), MaxRetries: ptr(int(m.MaxRetries.ValueInt64())),
 		Entries: &entries, TimeoutDestination: to, InvalidDestination: inv})
 	if err != nil {

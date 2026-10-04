@@ -129,12 +129,14 @@ resource "apipbx_recording" "welcome" {
   content_base64 = filebase64("welcome.wav")
 }
 
-# A menu: 1 rings reception, 2 the ring group; silence or an unknown key ends in voicemail.
+# A menu: 1 rings reception, 2 the ring group, or the caller dials an extension number directly;
+# silence or an unknown key ends in voicemail.
 resource "apipbx_ivr" "main" {
   tenant_id       = apipbx_tenant.t.id
   name            = "Main menu"
   recording_id    = apipbx_recording.welcome.id # or announcement = "custom/welcome" for a sound file on the Asterisk host
   timeout_seconds = 8
+  direct_dial     = ["extension"]
   entries = [
     { digit = "1", destination_type = "extension", destination_id = apipbx_extension.a.id },
     { digit = "2", destination_type = "ring_group", destination_id = apipbx_ring_group.g.id },
