@@ -1551,3 +1551,55 @@ func (c *Client) UpdateFirewallSite(ctx context.Context, id int64, p FirewallSit
 func (c *Client) DeleteFirewallSite(ctx context.Context, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("/v1/firewall/sites/%d", id))
 }
+
+// FirewallProvider is a carrier template: a provider's gateways and address blocks, used by carriers by id.
+type FirewallProvider struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Hosts       []FirewallProviderHost `json:"hosts"`
+	Prefixes    []string               `json:"prefixes"`
+	Notes       []string               `json:"notes"`
+	Verified    string                 `json:"verified"`
+	Builtin     bool                   `json:"builtin"`
+}
+
+type FirewallProviderHost struct {
+	Host string `json:"host"`
+	Use  string `json:"use"`
+}
+
+type FirewallProviderInput struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Hosts       []FirewallProviderHost `json:"hosts"`
+	Prefixes    []string               `json:"prefixes"`
+	Notes       []string               `json:"notes"`
+	Verified    string                 `json:"verified"`
+}
+
+type FirewallProviderPatch struct {
+	Name        *string                 `json:"name,omitempty"`
+	Description *string                 `json:"description,omitempty"`
+	Hosts       *[]FirewallProviderHost `json:"hosts,omitempty"`
+	Prefixes    *[]string               `json:"prefixes,omitempty"`
+	Notes       *[]string               `json:"notes,omitempty"`
+	Verified    *string                 `json:"verified,omitempty"`
+}
+
+func (c *Client) CreateFirewallProvider(ctx context.Context, in FirewallProviderInput) (FirewallProvider, error) {
+	return create[FirewallProvider](ctx, c, "/v1/firewall/providers", in)
+}
+
+func (c *Client) GetFirewallProvider(ctx context.Context, id string) (FirewallProvider, error) {
+	return get[FirewallProvider](ctx, c, "/v1/firewall/providers/"+id)
+}
+
+func (c *Client) UpdateFirewallProvider(ctx context.Context, id string, p FirewallProviderPatch) (FirewallProvider, error) {
+	return patch[FirewallProvider](ctx, c, "/v1/firewall/providers/"+id, p)
+}
+
+func (c *Client) DeleteFirewallProvider(ctx context.Context, id string) error {
+	return c.remove(ctx, "/v1/firewall/providers/"+id)
+}
