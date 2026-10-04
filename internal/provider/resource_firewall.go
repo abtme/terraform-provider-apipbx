@@ -221,7 +221,7 @@ func (r *firewallRestrictionResource) Schema(_ context.Context, _ resource.Schem
 		Attributes: map[string]schema.Attribute{
 			"id": idAttr(),
 			"service": schema.StringAttribute{Required: true, PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
-				Description: "ssh, api, sip, sips, wss, iax2 or rtp."},
+				Description: "ssh, api, https, sip, sips, wss, iax2 or rtp."},
 			"sources": schema.SetAttribute{Required: true, ElementType: types.StringType, PlanModifiers: []planmodifier.Set{sameSources{}},
 				Description: "Addresses or CIDR ranges, IPv4 and IPv6 mixed. Never 0.0.0.0/0 or ::/0 (delete the restriction instead)."},
 			"comment": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("")},
