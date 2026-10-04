@@ -1646,3 +1646,45 @@ func (c *Client) GetServerSettings(ctx context.Context) (ServerSettingsStatus, e
 func (c *Client) UpdateServerSettings(ctx context.Context, patchBody map[string]any) (ServerSettingsStatus, error) {
 	return patch[ServerSettingsStatus](ctx, c, "/v1/settings", patchBody)
 }
+
+// BackupRemote is the optional copy of each backup on another machine (SFTP).
+type BackupRemote struct {
+	Enabled bool   `json:"enabled"`
+	Host    string `json:"host"`
+	Port    int    `json:"port"`
+	User    string `json:"user"`
+	Path    string `json:"path"`
+	Keep    int    `json:"keep"`
+}
+
+// BackupConfig is how the server backs itself up.
+type BackupConfig struct {
+	Enabled    bool         `json:"enabled"`
+	Time       string       `json:"time"`
+	Keep       int          `json:"keep"`
+	Dir        string       `json:"dir"`
+	Recordings bool         `json:"recordings"`
+	Remote     BackupRemote `json:"remote"`
+}
+
+type BackupStatus struct {
+	Config    BackupConfig `json:"config"`
+	PublicKey string       `json:"public_key"`
+}
+
+func (c *Client) GetBackup(ctx context.Context) (BackupStatus, error) {
+	return get[BackupStatus](ctx, c, "/v1/backup")
+}
+
+// UpdateBackup changes the fields in body (JSON names, the remote's nested under "remote"); the others stay as they are.
+func (c *Client) UpdateBackup(ctx context.Context, body map[string]any) (BackupStatus, error) {
+	return patch[BackupStatus](ctx, c, "/v1/backup", body)
+}
+
+// MakeBackupKey makes the key the remote copy uses if there is none, and returns its public half.
+func (c *Client) MakeBackupKey(ctx context.Context) (string, error) {
+	out, err := create[struct {
+		PublicKey string `json:"public_key"`
+	}](ctx, c, "/v1/backup/remote/key", map[string]any{"regenerate": false})
+	return out.PublicKey, err
+}
