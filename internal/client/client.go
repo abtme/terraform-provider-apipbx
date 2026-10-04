@@ -1603,3 +1603,43 @@ func (c *Client) UpdateFirewallProvider(ctx context.Context, id string, p Firewa
 func (c *Client) DeleteFirewallProvider(ctx context.Context, id string) error {
 	return c.remove(ctx, "/v1/firewall/providers/"+id)
 }
+
+// ServerSettings are the server's own settings (what the Asterisk configuration and the daemon are made from). The AMI secret is write-only.
+type ServerSettings struct {
+	ODBCDSN       string `json:"odbc_dsn"`
+	DBUser        string `json:"db_user"`
+	AMIUser       string `json:"ami_user"`
+	AMIBind       string `json:"ami_bind"`
+	AMIPort       int    `json:"ami_port"`
+	SIPPort       int    `json:"sip_port"`
+	IAXPort       int    `json:"iax_port"`
+	ExternalIP    string `json:"external_ip"`
+	LocalNet      string `json:"local_net"`
+	RTPStart      int    `json:"rtp_start"`
+	RTPEnd        int    `json:"rtp_end"`
+	VoicemailFrom string `json:"voicemail_from"`
+	MailCmd       string `json:"mail_cmd"`
+	MediaURL      string `json:"media_url"`
+	RecordingsDir string `json:"call_recordings_dir"`
+	TLSCertFile   string `json:"tls_cert"`
+	TLSKeyFile    string `json:"tls_key"`
+	TLSPort       int    `json:"tls_port"`
+	WSSPort       int    `json:"wss_port"`
+	TLSOnly       bool   `json:"tls_only"`
+}
+
+type ServerSettingsStatus struct {
+	Settings   ServerSettings `json:"settings"`
+	Revision   int64          `json:"revision"`
+	Configured bool           `json:"configured"`
+	InSync     bool           `json:"in_sync"`
+}
+
+func (c *Client) GetServerSettings(ctx context.Context) (ServerSettingsStatus, error) {
+	return get[ServerSettingsStatus](ctx, c, "/v1/settings")
+}
+
+// UpdateServerSettings changes the fields in patch (JSON names); the others stay as they are.
+func (c *Client) UpdateServerSettings(ctx context.Context, patchBody map[string]any) (ServerSettingsStatus, error) {
+	return patch[ServerSettingsStatus](ctx, c, "/v1/settings", patchBody)
+}
