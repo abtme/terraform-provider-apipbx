@@ -1385,3 +1385,119 @@ func (c *Client) UpdatePhone(ctx context.Context, tenant, id int64, p PhonePatch
 func (c *Client) DeletePhone(ctx context.Context, tenant, id int64) error {
 	return c.remove(ctx, fmt.Sprintf("%s/%d", tp(tenant, "phones"), id))
 }
+
+// ---- firewall (platform key: it protects the server, not a tenant)
+
+type Firewall struct {
+	Enabled bool `json:"enabled"`
+}
+
+func (c *Client) GetFirewall(ctx context.Context) (Firewall, error) {
+	return get[Firewall](ctx, c, "/v1/firewall")
+}
+
+func (c *Client) EnableFirewall(ctx context.Context) (Firewall, error) {
+	return create[Firewall](ctx, c, "/v1/firewall", nil)
+}
+
+func (c *Client) DisableFirewall(ctx context.Context) (Firewall, error) {
+	var out Firewall
+	err := c.do(ctx, "DELETE", "/v1/firewall", nil, &out)
+	return out, err
+}
+
+type FirewallRestriction struct {
+	Service string   `json:"service"`
+	Sources []string `json:"sources"`
+	Comment string   `json:"comment"`
+	Force   bool     `json:"force"`
+}
+
+type FirewallRestrictionInput struct {
+	Sources []string `json:"sources"`
+	Comment string   `json:"comment,omitempty"`
+	Force   bool     `json:"force,omitempty"`
+}
+
+func (c *Client) SetFirewallRestriction(ctx context.Context, service string, in FirewallRestrictionInput) (FirewallRestriction, error) {
+	var out FirewallRestriction
+	err := c.do(ctx, "PUT", "/v1/firewall/restrictions/"+service, in, &out)
+	return out, err
+}
+
+func (c *Client) GetFirewallRestriction(ctx context.Context, service string) (FirewallRestriction, error) {
+	return get[FirewallRestriction](ctx, c, "/v1/firewall/restrictions/"+service)
+}
+
+func (c *Client) DeleteFirewallRestriction(ctx context.Context, service string) error {
+	return c.remove(ctx, "/v1/firewall/restrictions/"+service)
+}
+
+type FirewallRule struct {
+	ID       int64    `json:"id"`
+	Action   string   `json:"action"`
+	Protocol string   `json:"protocol"`
+	Port     string   `json:"port"`
+	Sources  []string `json:"sources"`
+	Comment  string   `json:"comment"`
+}
+
+type FirewallRuleInput struct {
+	Action   string   `json:"action"`
+	Protocol string   `json:"protocol,omitempty"`
+	Port     string   `json:"port,omitempty"`
+	Sources  []string `json:"sources,omitempty"`
+	Comment  string   `json:"comment,omitempty"`
+}
+
+func (c *Client) CreateFirewallRule(ctx context.Context, in FirewallRuleInput) (FirewallRule, error) {
+	return create[FirewallRule](ctx, c, "/v1/firewall/rules", in)
+}
+
+func (c *Client) GetFirewallRule(ctx context.Context, id int64) (FirewallRule, error) {
+	return get[FirewallRule](ctx, c, fmt.Sprintf("/v1/firewall/rules/%d", id))
+}
+
+func (c *Client) DeleteFirewallRule(ctx context.Context, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("/v1/firewall/rules/%d", id))
+}
+
+type FirewallCarrier struct {
+	ID       int64    `json:"id"`
+	Provider string   `json:"provider"`
+	Name     string   `json:"name"`
+	Enabled  bool     `json:"enabled"`
+	Sources  []string `json:"sources"`
+	Hosts    []string `json:"hosts"`
+}
+
+type FirewallCarrierInput struct {
+	Provider string   `json:"provider"`
+	Name     string   `json:"name,omitempty"`
+	Enabled  *bool    `json:"enabled,omitempty"`
+	Sources  []string `json:"sources,omitempty"`
+	Hosts    []string `json:"hosts,omitempty"`
+}
+
+type FirewallCarrierPatch struct {
+	Name    *string   `json:"name,omitempty"`
+	Enabled *bool     `json:"enabled,omitempty"`
+	Sources *[]string `json:"sources,omitempty"`
+	Hosts   *[]string `json:"hosts,omitempty"`
+}
+
+func (c *Client) CreateFirewallCarrier(ctx context.Context, in FirewallCarrierInput) (FirewallCarrier, error) {
+	return create[FirewallCarrier](ctx, c, "/v1/firewall/carriers", in)
+}
+
+func (c *Client) GetFirewallCarrier(ctx context.Context, id int64) (FirewallCarrier, error) {
+	return get[FirewallCarrier](ctx, c, fmt.Sprintf("/v1/firewall/carriers/%d", id))
+}
+
+func (c *Client) UpdateFirewallCarrier(ctx context.Context, id int64, p FirewallCarrierPatch) (FirewallCarrier, error) {
+	return patch[FirewallCarrier](ctx, c, fmt.Sprintf("/v1/firewall/carriers/%d", id), p)
+}
+
+func (c *Client) DeleteFirewallCarrier(ctx context.Context, id int64) error {
+	return c.remove(ctx, fmt.Sprintf("/v1/firewall/carriers/%d", id))
+}
