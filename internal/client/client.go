@@ -1606,26 +1606,29 @@ func (c *Client) DeleteFirewallProvider(ctx context.Context, id string) error {
 
 // ServerSettings are the server's own settings (what the Asterisk configuration and the daemon are made from). The AMI secret is write-only.
 type ServerSettings struct {
-	ODBCDSN       string `json:"odbc_dsn"`
-	DBUser        string `json:"db_user"`
-	AMIUser       string `json:"ami_user"`
-	AMIBind       string `json:"ami_bind"`
-	AMIPort       int    `json:"ami_port"`
-	SIPPort       int    `json:"sip_port"`
-	IAXPort       int    `json:"iax_port"`
-	ExternalIP    string `json:"external_ip"`
-	LocalNet      string `json:"local_net"`
-	RTPStart      int    `json:"rtp_start"`
-	RTPEnd        int    `json:"rtp_end"`
-	VoicemailFrom string `json:"voicemail_from"`
-	MailCmd       string `json:"mail_cmd"`
-	MediaURL      string `json:"media_url"`
-	RecordingsDir string `json:"call_recordings_dir"`
-	TLSCertFile   string `json:"tls_cert"`
-	TLSKeyFile    string `json:"tls_key"`
-	TLSPort       int    `json:"tls_port"`
-	WSSPort       int    `json:"wss_port"`
-	TLSOnly       bool   `json:"tls_only"`
+	ODBCDSN             string `json:"odbc_dsn"`
+	DBUser              string `json:"db_user"`
+	AMIUser             string `json:"ami_user"`
+	AMIBind             string `json:"ami_bind"`
+	AMIPort             int    `json:"ami_port"`
+	SIPPort             int    `json:"sip_port"`
+	IAXPort             int    `json:"iax_port"`
+	ExternalIP          string `json:"external_ip"`
+	LocalNet            string `json:"local_net"`
+	RTPStart            int    `json:"rtp_start"`
+	RTPEnd              int    `json:"rtp_end"`
+	VoicemailFrom       string `json:"voicemail_from"`
+	VoicemailMinSecs    int    `json:"voicemail_min_secs"`
+	VoicemailMaxSecs    int    `json:"voicemail_max_secs"`
+	VoicemailMaxSilence int    `json:"voicemail_max_silence"`
+	MailCmd             string `json:"mail_cmd"`
+	MediaURL            string `json:"media_url"`
+	RecordingsDir       string `json:"call_recordings_dir"`
+	TLSCertFile         string `json:"tls_cert"`
+	TLSKeyFile          string `json:"tls_key"`
+	TLSPort             int    `json:"tls_port"`
+	WSSPort             int    `json:"wss_port"`
+	TLSOnly             bool   `json:"tls_only"`
 }
 
 type ServerSettingsStatus struct {

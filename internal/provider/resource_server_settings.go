@@ -21,28 +21,31 @@ import (
 type serverSettingsResource struct{ c *client.Client }
 
 type serverSettingsModel struct {
-	ID            types.String `tfsdk:"id"`
-	AMISecret     types.String `tfsdk:"ami_secret"`
-	ODBCDSN       types.String `tfsdk:"odbc_dsn"`
-	DBUser        types.String `tfsdk:"db_user"`
-	AMIUser       types.String `tfsdk:"ami_user"`
-	AMIBind       types.String `tfsdk:"ami_bind"`
-	AMIPort       types.Int64  `tfsdk:"ami_port"`
-	SIPPort       types.Int64  `tfsdk:"sip_port"`
-	IAXPort       types.Int64  `tfsdk:"iax_port"`
-	ExternalIP    types.String `tfsdk:"external_ip"`
-	LocalNet      types.String `tfsdk:"local_net"`
-	RTPStart      types.Int64  `tfsdk:"rtp_start"`
-	RTPEnd        types.Int64  `tfsdk:"rtp_end"`
-	VoicemailFrom types.String `tfsdk:"voicemail_from"`
-	MailCmd       types.String `tfsdk:"mail_cmd"`
-	MediaURL      types.String `tfsdk:"media_url"`
-	RecordingsDir types.String `tfsdk:"call_recordings_dir"`
-	TLSCertFile   types.String `tfsdk:"tls_cert"`
-	TLSKeyFile    types.String `tfsdk:"tls_key"`
-	TLSPort       types.Int64  `tfsdk:"tls_port"`
-	WSSPort       types.Int64  `tfsdk:"wss_port"`
-	TLSOnly       types.Bool   `tfsdk:"tls_only"`
+	ID                  types.String `tfsdk:"id"`
+	AMISecret           types.String `tfsdk:"ami_secret"`
+	ODBCDSN             types.String `tfsdk:"odbc_dsn"`
+	DBUser              types.String `tfsdk:"db_user"`
+	AMIUser             types.String `tfsdk:"ami_user"`
+	AMIBind             types.String `tfsdk:"ami_bind"`
+	AMIPort             types.Int64  `tfsdk:"ami_port"`
+	SIPPort             types.Int64  `tfsdk:"sip_port"`
+	IAXPort             types.Int64  `tfsdk:"iax_port"`
+	ExternalIP          types.String `tfsdk:"external_ip"`
+	LocalNet            types.String `tfsdk:"local_net"`
+	RTPStart            types.Int64  `tfsdk:"rtp_start"`
+	RTPEnd              types.Int64  `tfsdk:"rtp_end"`
+	VoicemailFrom       types.String `tfsdk:"voicemail_from"`
+	VoicemailMinSecs    types.Int64  `tfsdk:"voicemail_min_secs"`
+	VoicemailMaxSecs    types.Int64  `tfsdk:"voicemail_max_secs"`
+	VoicemailMaxSilence types.Int64  `tfsdk:"voicemail_max_silence"`
+	MailCmd             types.String `tfsdk:"mail_cmd"`
+	MediaURL            types.String `tfsdk:"media_url"`
+	RecordingsDir       types.String `tfsdk:"call_recordings_dir"`
+	TLSCertFile         types.String `tfsdk:"tls_cert"`
+	TLSKeyFile          types.String `tfsdk:"tls_key"`
+	TLSPort             types.Int64  `tfsdk:"tls_port"`
+	WSSPort             types.Int64  `tfsdk:"wss_port"`
+	TLSOnly             types.Bool   `tfsdk:"tls_only"`
 }
 
 func NewServerSettingsResource() resource.Resource { return &serverSettingsResource{} }
@@ -57,28 +60,31 @@ func (r *serverSettingsResource) Schema(_ context.Context, _ resource.SchemaRequ
 			"platform key. Only the attributes you set are sent; the others keep the server's value and are read back. A change to a port, TLS or the manager login " +
 			"restarts Asterisk and apipbxd. Destroying this resource leaves the settings as they are. Import with \"settings\".",
 		Attributes: map[string]schema.Attribute{
-			"id":                  idAttr(),
-			"ami_secret":          schema.StringAttribute{Optional: true, Sensitive: true, Description: "The manager secret (8-128 characters, no spaces or ; = \\). Write-only: the server never returns it, so a change made elsewhere is not detected."},
-			"odbc_dsn":            schema.StringAttribute{Optional: true, Computed: true, Description: "The ODBC data source Asterisk reads the database through (default apipbx).", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"db_user":             schema.StringAttribute{Optional: true, Computed: true, Description: "The database user Asterisk connects as.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"ami_user":            schema.StringAttribute{Optional: true, Computed: true, Description: "The Asterisk manager login apipbxd uses to reload Asterisk. Changing it restarts Asterisk and apipbxd.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"ami_bind":            schema.StringAttribute{Optional: true, Computed: true, Description: "The manager's listen address.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"ami_port":            schema.Int64Attribute{Optional: true, Computed: true, Description: "The manager's listen port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"sip_port":            schema.Int64Attribute{Optional: true, Computed: true, Description: "The SIP UDP port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"iax_port":            schema.Int64Attribute{Optional: true, Computed: true, Description: "The IAX2 UDP port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"external_ip":         schema.StringAttribute{Optional: true, Computed: true, Description: "The public IP when behind NAT; empty = none.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"local_net":           schema.StringAttribute{Optional: true, Computed: true, Description: "The local network CIDR, with external_ip.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"rtp_start":           schema.Int64Attribute{Optional: true, Computed: true, Description: "The first audio (RTP) port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"rtp_end":             schema.Int64Attribute{Optional: true, Computed: true, Description: "The last audio (RTP) port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"voicemail_from":      schema.StringAttribute{Optional: true, Computed: true, Description: "The From address of voicemail emails.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"mail_cmd":            schema.StringAttribute{Optional: true, Computed: true, Description: "The command voicemail emails are piped to.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"media_url":           schema.StringAttribute{Optional: true, Computed: true, Description: "Where Asterisk fetches recordings from (apipbxd's /media).", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"call_recordings_dir": schema.StringAttribute{Optional: true, Computed: true, Description: "Where call recordings are written.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"tls_cert":            schema.StringAttribute{Optional: true, Computed: true, Description: "The TLS certificate file (PEM, full chain) on the server; with tls_key it switches on SIP over TLS and WebRTC.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"tls_key":             schema.StringAttribute{Optional: true, Computed: true, Description: "The TLS key file (PEM) on the server.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"tls_port":            schema.Int64Attribute{Optional: true, Computed: true, Description: "The SIP over TLS port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"wss_port":            schema.Int64Attribute{Optional: true, Computed: true, Description: "The secure WebSocket (WebRTC) port; -1 leaves WebRTC off.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
-			"tls_only":            schema.BoolAttribute{Optional: true, Computed: true, Description: "Accept no plain SIP at all (needs a certificate).", PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()}},
+			"id":                    idAttr(),
+			"ami_secret":            schema.StringAttribute{Optional: true, Sensitive: true, Description: "The manager secret (8-128 characters, no spaces or ; = \\). Write-only: the server never returns it, so a change made elsewhere is not detected."},
+			"odbc_dsn":              schema.StringAttribute{Optional: true, Computed: true, Description: "The ODBC data source Asterisk reads the database through (default apipbx).", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"db_user":               schema.StringAttribute{Optional: true, Computed: true, Description: "The database user Asterisk connects as.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"ami_user":              schema.StringAttribute{Optional: true, Computed: true, Description: "The Asterisk manager login apipbxd uses to reload Asterisk. Changing it restarts Asterisk and apipbxd.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"ami_bind":              schema.StringAttribute{Optional: true, Computed: true, Description: "The manager's listen address.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"ami_port":              schema.Int64Attribute{Optional: true, Computed: true, Description: "The manager's listen port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"sip_port":              schema.Int64Attribute{Optional: true, Computed: true, Description: "The SIP UDP port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"iax_port":              schema.Int64Attribute{Optional: true, Computed: true, Description: "The IAX2 UDP port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"external_ip":           schema.StringAttribute{Optional: true, Computed: true, Description: "The public IP when behind NAT; empty = none.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"local_net":             schema.StringAttribute{Optional: true, Computed: true, Description: "The local network CIDR, with external_ip.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"rtp_start":             schema.Int64Attribute{Optional: true, Computed: true, Description: "The first audio (RTP) port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"rtp_end":               schema.Int64Attribute{Optional: true, Computed: true, Description: "The last audio (RTP) port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"voicemail_min_secs":    schema.Int64Attribute{Optional: true, Computed: true, Description: "A voicemail message shorter than this many seconds is thrown away (default 1).", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"voicemail_max_secs":    schema.Int64Attribute{Optional: true, Computed: true, Description: "A voicemail message ends at this length (default 180).", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"voicemail_max_silence": schema.Int64Attribute{Optional: true, Computed: true, Description: "The recording stops after this many seconds of silence (default 5); the caller can always end it with #.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"voicemail_from":        schema.StringAttribute{Optional: true, Computed: true, Description: "The From address of voicemail emails.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"mail_cmd":              schema.StringAttribute{Optional: true, Computed: true, Description: "The command voicemail emails are piped to.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"media_url":             schema.StringAttribute{Optional: true, Computed: true, Description: "Where Asterisk fetches recordings from (apipbxd's /media).", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"call_recordings_dir":   schema.StringAttribute{Optional: true, Computed: true, Description: "Where call recordings are written.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"tls_cert":              schema.StringAttribute{Optional: true, Computed: true, Description: "The TLS certificate file (PEM, full chain) on the server; with tls_key it switches on SIP over TLS and WebRTC.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"tls_key":               schema.StringAttribute{Optional: true, Computed: true, Description: "The TLS key file (PEM) on the server.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"tls_port":              schema.Int64Attribute{Optional: true, Computed: true, Description: "The SIP over TLS port.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"wss_port":              schema.Int64Attribute{Optional: true, Computed: true, Description: "The secure WebSocket (WebRTC) port; -1 leaves WebRTC off.", PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()}},
+			"tls_only":              schema.BoolAttribute{Optional: true, Computed: true, Description: "Accept no plain SIP at all (needs a certificate).", PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()}},
 		}}
 }
 
@@ -128,6 +134,15 @@ func (m serverSettingsModel) body() map[string]any {
 	if !m.VoicemailFrom.IsNull() && !m.VoicemailFrom.IsUnknown() {
 		b["voicemail_from"] = m.VoicemailFrom.ValueString()
 	}
+	if !m.VoicemailMinSecs.IsNull() && !m.VoicemailMinSecs.IsUnknown() {
+		b["voicemail_min_secs"] = m.VoicemailMinSecs.ValueInt64()
+	}
+	if !m.VoicemailMaxSecs.IsNull() && !m.VoicemailMaxSecs.IsUnknown() {
+		b["voicemail_max_secs"] = m.VoicemailMaxSecs.ValueInt64()
+	}
+	if !m.VoicemailMaxSilence.IsNull() && !m.VoicemailMaxSilence.IsUnknown() {
+		b["voicemail_max_silence"] = m.VoicemailMaxSilence.ValueInt64()
+	}
 	if !m.MailCmd.IsNull() && !m.MailCmd.IsUnknown() {
 		b["mail_cmd"] = m.MailCmd.ValueString()
 	}
@@ -169,6 +184,9 @@ func (m *serverSettingsModel) set(s client.ServerSettings) {
 	m.RTPStart = types.Int64Value(int64(s.RTPStart))
 	m.RTPEnd = types.Int64Value(int64(s.RTPEnd))
 	m.VoicemailFrom = types.StringValue(s.VoicemailFrom)
+	m.VoicemailMinSecs = types.Int64Value(int64(s.VoicemailMinSecs))
+	m.VoicemailMaxSecs = types.Int64Value(int64(s.VoicemailMaxSecs))
+	m.VoicemailMaxSilence = types.Int64Value(int64(s.VoicemailMaxSilence))
 	m.MailCmd = types.StringValue(s.MailCmd)
 	m.MediaURL = types.StringValue(s.MediaURL)
 	m.RecordingsDir = types.StringValue(s.RecordingsDir)
