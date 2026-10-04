@@ -260,6 +260,9 @@ type Trunk struct {
 	MaxChannels    int    `json:"max_channels"`
 	ContinueOnFail bool   `json:"continue_on_fail"`
 	Enabled        bool   `json:"enabled"`
+
+	InboundUsername string `json:"inbound_username"`
+	InboundSecret   string `json:"inbound_secret"`
 }
 
 type TrunkInput struct {
@@ -273,6 +276,9 @@ type TrunkInput struct {
 	OutboundCID    string `json:"outbound_cid"`
 	MaxChannels    int    `json:"max_channels"`
 	ContinueOnFail bool   `json:"continue_on_fail"`
+
+	InboundUsername string `json:"inbound_username,omitempty"`
+	InboundSecret   string `json:"inbound_secret,omitempty"`
 }
 
 type TrunkPatch struct {
@@ -285,6 +291,9 @@ type TrunkPatch struct {
 	MaxChannels    *int    `json:"max_channels,omitempty"`
 	ContinueOnFail *bool   `json:"continue_on_fail,omitempty"`
 	Enabled        *bool   `json:"enabled,omitempty"`
+
+	InboundUsername *string `json:"inbound_username,omitempty"`
+	InboundSecret   *string `json:"inbound_secret,omitempty"`
 }
 
 func (c *Client) CreateTrunk(ctx context.Context, tenant int64, in TrunkInput) (Trunk, error) {

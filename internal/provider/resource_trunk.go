@@ -33,6 +33,9 @@ type trunkModel struct {
 	ContinueOnFail types.Bool   `tfsdk:"continue_on_fail"`
 	Enabled        types.Bool   `tfsdk:"enabled"`
 	AsteriskID     types.String `tfsdk:"asterisk_id"`
+
+	InboundUsername types.String `tfsdk:"inbound_username"`
+	InboundSecret   types.String `tfsdk:"inbound_secret"`
 }
 
 func NewTrunkResource() resource.Resource { return &trunkResource{} }
@@ -61,7 +64,11 @@ func (r *trunkResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"max_channels":     schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(0), Description: "0 = unlimited."},
 			"continue_on_fail": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false), Description: "Try the next trunk after any failure."},
 			"enabled":          schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(true)},
-			"asterisk_id":      schema.StringAttribute{Computed: true, PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"inbound_username": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""),
+				Description: "IAX2 only: the user name the carrier presents when it calls you (empty: it is recognised as the trunk's own peer, asterisk_id). Unique across the whole server."},
+			"inbound_secret": schema.StringAttribute{Optional: true, Computed: true, Sensitive: true, Default: stringdefault.StaticString(""),
+				Description: "The secret for inbound_username (8-64 characters)."},
+			"asterisk_id": schema.StringAttribute{Computed: true, PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
 		}}
 }
 
@@ -80,6 +87,7 @@ func (m *trunkModel) set(t client.Trunk) {
 	m.Register, m.OutboundCID = types.BoolValue(t.Register), types.StringValue(t.OutboundCID)
 	m.MaxChannels, m.ContinueOnFail = types.Int64Value(int64(t.MaxChannels)), types.BoolValue(t.ContinueOnFail)
 	m.Enabled, m.AsteriskID = types.BoolValue(t.Enabled), types.StringValue(t.AsteriskID)
+	m.InboundUsername, m.InboundSecret = types.StringValue(t.InboundUsername), types.StringValue(t.InboundSecret)
 }
 
 func (m trunkModel) port() *int {
@@ -100,7 +108,8 @@ func (r *trunkResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Name: m.Name.ValueString(), Tech: m.Tech.ValueString(), Host: m.Host.ValueString(), Port: m.port(),
 		Username: m.Username.ValueString(), Secret: m.Secret.ValueString(), Register: m.Register.ValueBool(),
 		OutboundCID: m.OutboundCID.ValueString(), MaxChannels: int(m.MaxChannels.ValueInt64()),
-		ContinueOnFail: m.ContinueOnFail.ValueBool(),
+		ContinueOnFail:  m.ContinueOnFail.ValueBool(),
+		InboundUsername: m.InboundUsername.ValueString(), InboundSecret: m.InboundSecret.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create trunk", err.Error())
@@ -145,6 +154,7 @@ func (r *trunkResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Secret: ptr(m.Secret.ValueString()), Register: ptr(m.Register.ValueBool()),
 		OutboundCID: ptr(m.OutboundCID.ValueString()), MaxChannels: ptr(int(m.MaxChannels.ValueInt64())),
 		ContinueOnFail: ptr(m.ContinueOnFail.ValueBool()), Enabled: ptr(m.Enabled.ValueBool()),
+		InboundUsername: ptr(m.InboundUsername.ValueString()), InboundSecret: ptr(m.InboundSecret.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update trunk", err.Error())
