@@ -1,6 +1,6 @@
 # terraform-provider-apipbx
 
-Terraform provider for [apipbx](../apipbx), the API-only multi-tenant PBX.
+Terraform provider for apipbx, the API-only multi-tenant PBX built on Asterisk.
 
     provider "apipbx" {
       endpoint = "https://pbx.example.com"   # or APIPBX_ENDPOINT
