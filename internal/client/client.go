@@ -1361,25 +1361,40 @@ func (c *Client) DeleteWebhook(ctx context.Context, tenant, id int64) error {
 // ---- phones
 
 type Phone struct {
-	ID          int64  `json:"id"`
-	TenantID    int64  `json:"tenant_id"`
-	MAC         string `json:"mac"`
-	ExtensionID int64  `json:"extension_id"`
-	Model       string `json:"model"`
-	Description string `json:"description"`
+	ID                int64      `json:"id"`
+	TenantID          int64      `json:"tenant_id"`
+	MAC               string     `json:"mac"`
+	ExtensionID       int64      `json:"extension_id"`
+	Model             string     `json:"model"`
+	ExtraExtensionIDs []int64    `json:"extra_extension_ids"`
+	Keys              []PhoneKey `json:"keys"`
+	Description       string     `json:"description"`
+}
+
+// PhoneKey is one programmable key (sangoma-s only).
+type PhoneKey struct {
+	Key   int    `json:"key"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+	Label string `json:"label"`
+	Line  int    `json:"line"`
 }
 
 type PhoneInput struct {
-	MAC         string `json:"mac"`
-	ExtensionID int64  `json:"extension_id"`
-	Model       string `json:"model"`
-	Description string `json:"description"`
+	MAC               string     `json:"mac"`
+	ExtensionID       int64      `json:"extension_id"`
+	Model             string     `json:"model"`
+	ExtraExtensionIDs []int64    `json:"extra_extension_ids"`
+	Keys              []PhoneKey `json:"keys"`
+	Description       string     `json:"description"`
 }
 
 type PhonePatch struct {
-	ExtensionID *int64  `json:"extension_id,omitempty"`
-	Model       *string `json:"model,omitempty"`
-	Description *string `json:"description,omitempty"`
+	ExtensionID       *int64      `json:"extension_id,omitempty"`
+	Model             *string     `json:"model,omitempty"`
+	ExtraExtensionIDs *[]int64    `json:"extra_extension_ids,omitempty"`
+	Keys              *[]PhoneKey `json:"keys,omitempty"`
+	Description       *string     `json:"description,omitempty"`
 }
 
 func (c *Client) CreatePhone(ctx context.Context, tenant int64, in PhoneInput) (Phone, error) {

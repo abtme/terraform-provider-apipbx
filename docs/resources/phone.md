@@ -19,13 +19,29 @@ A desk phone, by MAC address, that provisions itself as an extension from the PB
 
 - `extension_id` (String)
 - `mac` (String) The phone's MAC address, with or without : - separators; stored as 12 lower-case hex digits.
-- `model` (String) yealink, grandstream or generic (a JSON file for softphone apps).
+- `model` (String) yealink, grandstream, sangoma-s (a Sangoma S-series desk phone, up to 6 lines), sangoma-dect (a Sangoma DB-series DECT base, a line per handset, up to 10) or generic (a JSON file for softphone apps).
 - `tenant_id` (String)
 
 ### Optional
 
 - `description` (String)
+- `extra_extension_ids` (List of String) Extension ids for lines 2 and up, in line order (sangoma-s and sangoma-dect only).
+- `keys` (Attributes List) Programmable keys (sangoma-s only). Empty leaves the phone's own keys alone; otherwise every key is written and a key not listed is set to none. (see [below for nested schema](#nestedatt--keys))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--keys"></a>
+### Nested Schema for `keys`
+
+Required:
+
+- `key` (Number) 1-45: the line keys on every page, in order.
+- `type` (String) line, blf (lights with the extension in value), speed_dial, voicemail (dials *97 unless value is set), park (a park slot) or dnd.
+
+Optional:
+
+- `label` (String) At most 31 characters.
+- `line` (Number) The phone line (account) it belongs to, from 1.
+- `value` (String) Digits, * # or +; none for line and dnd.
