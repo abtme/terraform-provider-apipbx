@@ -45,6 +45,7 @@ type queueModel struct {
 	Members           []queueMemberModel `tfsdk:"members"`
 	TimeoutType       types.String       `tfsdk:"timeout_type"`
 	TimeoutID         types.String       `tfsdk:"timeout_id"`
+	Record            types.Bool         `tfsdk:"record"`
 }
 
 func NewQueueResource() resource.Resource { return &queueResource{} }
@@ -85,6 +86,8 @@ func (r *queueResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"timeout_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
 				Description: "Where callers go who wait too long or cannot join: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group, voicemail_group, disa or hangup."},
 			"timeout_id": schema.StringAttribute{Optional: true},
+			"record": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false),
+				Description: "Record the calls an agent answers, from the answer (both sides, no hold music), labelled with the queue's number; one recording per call."},
 		}}
 }
 
@@ -105,6 +108,7 @@ func (m *queueModel) set(q client.CallQueue) {
 		m.Members = append(m.Members, queueMemberModel{idString(mem.ExtensionID), types.Int64Value(int64(mem.Penalty)), types.BoolValue(mem.Dynamic)})
 	}
 	m.TimeoutType, m.TimeoutID = destination(q.TimeoutDestination)
+	m.Record = types.BoolValue(q.Record)
 }
 
 func (m queueModel) members(r *queueResource, d interface{ AddError(string, string) }, parse func(types.String) int64) []client.QueueMember {
@@ -129,7 +133,7 @@ func (r *queueResource) Create(ctx context.Context, req resource.CreateRequest, 
 		WrapupTime: int(m.WrapupTime.ValueInt64()), MaxWait: int(m.MaxWait.ValueInt64()), MaxCallers: int(m.MaxCallers.ValueInt64()),
 		JoinEmpty: m.JoinEmpty.ValueBool(), LeaveWhenEmpty: m.LeaveWhenEmpty.ValueBool(), AnnouncePosition: m.AnnouncePosition.ValueBool(),
 		AnnounceHoldTime: m.AnnounceHoldTime.ValueBool(), AnnounceFrequency: int(m.AnnounceFrequency.ValueInt64()),
-		MusicOnHold: m.MusicOnHold.ValueString(), Members: members, TimeoutDestination: dest})
+		MusicOnHold: m.MusicOnHold.ValueString(), Members: members, TimeoutDestination: dest, Record: m.Record.ValueBool()})
 	if err != nil {
 		resp.Diagnostics.AddError("create queue", err.Error())
 		return
@@ -168,7 +172,7 @@ func (r *queueResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		MaxWait: ptr(int(m.MaxWait.ValueInt64())), MaxCallers: ptr(int(m.MaxCallers.ValueInt64())), JoinEmpty: ptr(m.JoinEmpty.ValueBool()),
 		LeaveWhenEmpty: ptr(m.LeaveWhenEmpty.ValueBool()), AnnouncePosition: ptr(m.AnnouncePosition.ValueBool()),
 		AnnounceHoldTime: ptr(m.AnnounceHoldTime.ValueBool()), AnnounceFrequency: ptr(int(m.AnnounceFrequency.ValueInt64())),
-		MusicOnHold: ptr(m.MusicOnHold.ValueString()), Members: &members, TimeoutDestination: dest})
+		MusicOnHold: ptr(m.MusicOnHold.ValueString()), Members: &members, TimeoutDestination: dest, Record: ptr(m.Record.ValueBool())})
 	if err != nil {
 		resp.Diagnostics.AddError("update queue", err.Error())
 		return

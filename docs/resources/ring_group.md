@@ -26,6 +26,7 @@ A ring group. Import with "<tenant id>/<ring group id>".
 
 - `failover_id` (String) Id of the failover extension, ring group or voicemail box.
 - `failover_type` (String) Where an unanswered call goes: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group, voicemail_group, disa or hangup.
+- `record` (Boolean) Record the calls the group answers, from the answer (both sides), labelled with the group's number; one recording per call.
 - `ring_time` (Number)
 - `strategy` (String) ringall, hunt or firstavailable.
 

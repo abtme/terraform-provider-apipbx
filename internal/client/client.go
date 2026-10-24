@@ -191,6 +191,8 @@ type Extension struct {
 	ForwardBusy          string `json:"forward_busy"`
 	ForwardNoAnswer      string `json:"forward_no_answer"`
 	ForwardUnavailable   string `json:"forward_unavailable"`
+	// MaxCalls is the most calls the extension may be in at once (0: no limit).
+	MaxCalls int `json:"max_calls"`
 }
 
 type ExtensionInput struct {
@@ -208,6 +210,7 @@ type ExtensionInput struct {
 	ForwardBusy          string `json:"forward_busy,omitempty"`
 	ForwardNoAnswer      string `json:"forward_no_answer,omitempty"`
 	ForwardUnavailable   string `json:"forward_unavailable,omitempty"`
+	MaxCalls             int    `json:"max_calls,omitempty"`
 }
 
 type ExtensionPatch struct {
@@ -225,6 +228,7 @@ type ExtensionPatch struct {
 	ForwardUnavailable   *string `json:"forward_unavailable,omitempty"`
 	Language             *string `json:"language,omitempty"`
 	Security             *string `json:"security,omitempty"`
+	MaxCalls             *int    `json:"max_calls,omitempty"`
 }
 
 func (c *Client) CreateExtension(ctx context.Context, tenant int64, in ExtensionInput) (Extension, error) {
@@ -328,6 +332,7 @@ type RingGroup struct {
 	RingTime int         `json:"ring_time"`
 	Members  []int64     `json:"members"`
 	Failover Destination `json:"failover"`
+	Record   bool        `json:"record"`
 }
 
 type RingGroupInput struct {
@@ -337,6 +342,7 @@ type RingGroupInput struct {
 	RingTime int          `json:"ring_time,omitempty"`
 	Members  []int64      `json:"members"`
 	Failover *Destination `json:"failover,omitempty"`
+	Record   bool         `json:"record,omitempty"`
 }
 
 type RingGroupPatch struct {
@@ -345,6 +351,7 @@ type RingGroupPatch struct {
 	RingTime *int         `json:"ring_time,omitempty"`
 	Members  *[]int64     `json:"members,omitempty"`
 	Failover *Destination `json:"failover,omitempty"`
+	Record   *bool        `json:"record,omitempty"`
 }
 
 func (c *Client) CreateRingGroup(ctx context.Context, tenant int64, in RingGroupInput) (RingGroup, error) {
@@ -816,6 +823,7 @@ type CallQueue struct {
 	MusicOnHold        string        `json:"music_on_hold"`
 	Members            []QueueMember `json:"members"`
 	TimeoutDestination Destination   `json:"timeout_destination"`
+	Record             bool          `json:"record"`
 }
 
 type CallQueueInput struct {
@@ -835,6 +843,7 @@ type CallQueueInput struct {
 	MusicOnHold        string        `json:"music_on_hold,omitempty"`
 	Members            []QueueMember `json:"members"`
 	TimeoutDestination *Destination  `json:"timeout_destination,omitempty"`
+	Record             bool          `json:"record,omitempty"`
 }
 
 type CallQueuePatch struct {
@@ -853,6 +862,7 @@ type CallQueuePatch struct {
 	MusicOnHold        *string        `json:"music_on_hold,omitempty"`
 	Members            *[]QueueMember `json:"members,omitempty"`
 	TimeoutDestination *Destination   `json:"timeout_destination,omitempty"`
+	Record             *bool          `json:"record,omitempty"`
 }
 
 func (c *Client) CreateCallQueue(ctx context.Context, tenant int64, in CallQueueInput) (CallQueue, error) {

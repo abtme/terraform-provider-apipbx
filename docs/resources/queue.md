@@ -33,6 +33,7 @@ A call queue. Import with "<tenant id>/<id>".
 - `max_wait` (Number) Seconds a caller may wait; 0 is for ever.
 - `members` (Attributes List) Agents. Use PJSIP extensions: IAX2 phones report no device state, so queues do not ring them reliably. (see [below for nested schema](#nestedatt--members))
 - `music_on_hold` (String) A music on hold class: one of the tenant's own (apipbx_moh_class) or one Asterisk has itself, like default.
+- `record` (Boolean) Record the calls an agent answers, from the answer (both sides, no hold music), labelled with the queue's number; one recording per call.
 - `retry` (Number) Seconds before the agents are tried again (0-300).
 - `strategy` (String) ringall, leastrecent, fewestcalls, random, rrmemory, rrordered, linear or wrandom.
 - `timeout_id` (String)

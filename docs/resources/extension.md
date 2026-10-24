@@ -30,6 +30,7 @@ A phone extension (SIP or IAX2). Import with "<tenant id>/<extension id>".
 - `forward_unavailable` (String) Forward when the phone is not registered.
 - `forward_unconditional` (String) Forward every call to this number (internal, or external through the outbound routes); empty is off. The phone's *72 and *73 change it.
 - `language` (String) The language of the prompts the phone hears: an Asterisk sound directory name such as en, es or pt_BR (install the matching sound package).
+- `max_calls` (Number) The most calls the extension may be in at once, made or received, 0-100 (0: no limit). Over it a call it makes gets a busy signal and a call to it takes the busy path. Ring group and queue calls are not counted.
 - `outbound_cid` (String)
 - `ring_time` (Number)
 - `secret` (String, Sensitive) The phone's password; generated when omitted.

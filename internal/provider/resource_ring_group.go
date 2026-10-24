@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
@@ -26,6 +27,7 @@ type ringGroupModel struct {
 	Members    types.List   `tfsdk:"members"`
 	FailoverTo types.String `tfsdk:"failover_type"`
 	FailoverID types.String `tfsdk:"failover_id"`
+	Record     types.Bool   `tfsdk:"record"`
 }
 
 func NewRingGroupResource() resource.Resource { return &ringGroupResource{} }
@@ -49,6 +51,8 @@ func (r *ringGroupResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"failover_type": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("hangup"),
 				Description: "Where an unanswered call goes: extension, ring_group, voicemail, time_condition, ivr, queue, conference, announcement, misc_destination, set_caller_id, paging_group, voicemail_group, disa or hangup."},
 			"failover_id": schema.StringAttribute{Optional: true, Description: "Id of the failover extension, ring group or voicemail box."},
+			"record": schema.BoolAttribute{Optional: true, Computed: true, Default: booldefault.StaticBool(false),
+				Description: "Record the calls the group answers, from the answer (both sides), labelled with the group's number; one recording per call."},
 		}}
 }
 
@@ -61,6 +65,7 @@ func (m *ringGroupModel) set(g client.RingGroup) {
 	m.Number, m.Name, m.Strategy = types.StringValue(g.Number), types.StringValue(g.Name), types.StringValue(g.Strategy)
 	m.RingTime, m.Members = types.Int64Value(int64(g.RingTime)), idListValue(g.Members)
 	m.FailoverTo, m.FailoverID = destination(g.Failover)
+	m.Record = types.BoolValue(g.Record)
 }
 
 // destination splits an API destination into the (type, id) attribute pair.
@@ -82,7 +87,7 @@ func (r *ringGroupResource) Create(ctx context.Context, req resource.CreateReque
 	}
 	g, err := r.c.CreateRingGroup(ctx, tenant, client.RingGroupInput{
 		Number: m.Number.ValueString(), Name: m.Name.ValueString(), Strategy: m.Strategy.ValueString(),
-		RingTime: int(m.RingTime.ValueInt64()), Members: members, Failover: fo,
+		RingTime: int(m.RingTime.ValueInt64()), Members: members, Failover: fo, Record: m.Record.ValueBool(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create ring group", err.Error())
@@ -119,7 +124,7 @@ func (r *ringGroupResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 	g, err := r.c.UpdateRingGroup(ctx, tenant, id, client.RingGroupPatch{
 		Name: ptr(m.Name.ValueString()), Strategy: ptr(m.Strategy.ValueString()), RingTime: ptr(int(m.RingTime.ValueInt64())),
-		Members: &members, Failover: fo,
+		Members: &members, Failover: fo, Record: ptr(m.Record.ValueBool()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update ring group", err.Error())

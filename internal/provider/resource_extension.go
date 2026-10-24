@@ -36,6 +36,7 @@ type extensionModel struct {
 	ForwardBusy          types.String `tfsdk:"forward_busy"`
 	ForwardNoAnswer      types.String `tfsdk:"forward_no_answer"`
 	ForwardUnavailable   types.String `tfsdk:"forward_unavailable"`
+	MaxCalls             types.Int64  `tfsdk:"max_calls"`
 }
 
 func NewExtensionResource() resource.Resource { return &extensionResource{} }
@@ -69,6 +70,8 @@ func (r *extensionResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			"forward_busy":        schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when the phone is busy."},
 			"forward_no_answer":   schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when nobody answers within ring_time."},
 			"forward_unavailable": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString(""), Description: "Forward when the phone is not registered."},
+			"max_calls": schema.Int64Attribute{Optional: true, Computed: true, Default: int64default.StaticInt64(0),
+				Description: "The most calls the extension may be in at once, made or received, 0-100 (0: no limit). Over it a call it makes gets a busy signal and a call to it takes the busy path. Ring group and queue calls are not counted."},
 			"security": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("udp"),
 				Description: "How the phone connects: udp (default), tls (SIP over TLS with SRTP) or webrtc (secure WebSocket with DTLS-SRTP, for browsers and softphone apps). tls and webrtc need TLS set up on the server."},
 			"language": schema.StringAttribute{Optional: true, Computed: true, Default: stringdefault.StaticString("en"),
@@ -89,6 +92,7 @@ func (m *extensionModel) set(e client.Extension) {
 	m.OutboundCID = types.StringValue(e.OutboundCID)
 	m.RingTime, m.Enabled = types.Int64Value(int64(e.RingTime)), types.BoolValue(e.Enabled)
 	m.DND = types.BoolValue(e.DND)
+	m.MaxCalls = types.Int64Value(int64(e.MaxCalls))
 	m.Language = types.StringValue(e.Language)
 	m.Security = types.StringValue(e.Security)
 	m.ForwardUnconditional, m.ForwardBusy = types.StringValue(e.ForwardUnconditional), types.StringValue(e.ForwardBusy)
@@ -115,7 +119,7 @@ func (r *extensionResource) Create(ctx context.Context, req resource.CreateReque
 		Secret: m.Secret.ValueString(), OutboundCID: m.OutboundCID.ValueString(), RingTime: int(m.RingTime.ValueInt64()),
 		VoicemailBoxID: box, Language: m.Language.ValueString(), Security: m.Security.ValueString(), DND: m.DND.ValueBool(), ForwardUnconditional: m.ForwardUnconditional.ValueString(),
 		ForwardBusy: m.ForwardBusy.ValueString(), ForwardNoAnswer: m.ForwardNoAnswer.ValueString(),
-		ForwardUnavailable: m.ForwardUnavailable.ValueString(),
+		ForwardUnavailable: m.ForwardUnavailable.ValueString(), MaxCalls: int(m.MaxCalls.ValueInt64()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("create extension", err.Error())
@@ -164,6 +168,7 @@ func (r *extensionResource) Update(ctx context.Context, req resource.UpdateReque
 		RingTime: ptr(int(m.RingTime.ValueInt64())), Enabled: ptr(m.Enabled.ValueBool()), VoicemailBoxID: box, Language: ptr(m.Language.ValueString()), Security: ptr(m.Security.ValueString()),
 		DND: ptr(m.DND.ValueBool()), ForwardUnconditional: ptr(m.ForwardUnconditional.ValueString()), ForwardBusy: ptr(m.ForwardBusy.ValueString()),
 		ForwardNoAnswer: ptr(m.ForwardNoAnswer.ValueString()), ForwardUnavailable: ptr(m.ForwardUnavailable.ValueString()),
+		MaxCalls: ptr(int(m.MaxCalls.ValueInt64())),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("update extension", err.Error())
