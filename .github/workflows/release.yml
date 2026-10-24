@@ -1,22 +1,67 @@
 name: Release
 
+# Two ways to release, both waiting for an approval in the `release` environment (required reviewer: abtme) before
+# the job starts, and only that approved job can read the signing key (the OpenBao role is bound to environment
+# `release`):
+#   - Actions -> Release -> Run workflow on main with major / minor / patch: tags main's HEAD with the next version
+#     after the latest v* tag (v0.2.0 -> major v1.0.0, minor v0.3.0, patch v0.2.1), then releases it;
+#   - push a v* tag (it still waits for the approval). Tag ruleset "release tags": only an admin can move or delete
+#     a v* tag, so a released version is never changed underneath.
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Which part of the version goes up (tags the head of main)'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 permissions:
   contents: write
   id-token: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
   goreleaser:
     runs-on: arc-runners-apipbx
+    environment: release
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Tag the head of main
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          [ "$GITHUB_REF" = refs/heads/main ] || { echo "run it on main, not $GITHUB_REF"; exit 1; }
+          git fetch -q --tags origin
+          if git tag --points-at HEAD | grep -q '^v'; then echo "main's head is already released as $(git tag --points-at HEAD)"; exit 1; fi
+          latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -1)
+          IFS=. read -r major minor patch <<< "${latest#v}"
+          major=${major:-0} minor=${minor:-0} patch=${patch:-0}
+          case "$BUMP" in
+            major) VERSION="v$((major + 1)).0.0" ;;
+            minor) VERSION="v${major}.$((minor + 1)).0" ;;
+            patch) VERSION="v${major}.${minor}.$((patch + 1))" ;;
+            *) echo "bump must be major, minor or patch"; exit 1 ;;
+          esac
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "$VERSION"
+          git push origin "refs/tags/$VERSION"
+          echo "tagged $(git rev-parse --short HEAD) as $VERSION (was ${latest:-none}, $BUMP)" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -26,8 +71,9 @@ jobs:
 
       # Fetches the GPG signing key fresh from OpenBao on every run via
       # GitHub's own OIDC token - no secret ever stored in GitHub. The
-      # jwt-github auth mount/role is scoped to this repo's tag pushes
-      # only (see auth/jwt-github/role/terraform-provider-apipbx-release).
+      # jwt-github auth mount/role is scoped to this repo's approved
+      # `release` environment jobs only
+      # (see auth/jwt-github/role/terraform-provider-apipbx-release).
       - name: Fetch GPG key from OpenBao and prime gpg-agent
         env:
           BAO_ADDR: https://vault.turnbull.uk:8200
